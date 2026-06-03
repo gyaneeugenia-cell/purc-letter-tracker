@@ -17,6 +17,16 @@ import { letters, users, departments, movements, auditLogs, notifications } from
 
 let enabled = false;
 
+// Friendly labels so the database is readable in pgAdmin (alongside the codes).
+const STATUS_LABELS = {
+  ES_RECEIVED: 'Pending internal dispatch',
+  DISPATCHED_TO_DEPARTMENT: 'Dispatched internally',
+  READY_FOR_SIGNATURE: 'Pending external dispatch',
+  DISPATCHED: 'Dispatched externally',
+  ARCHIVED: 'Archived'
+};
+const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Sent' };
+
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS departments (
   id TEXT PRIMARY KEY, code TEXT, name TEXT, head TEXT, status TEXT, data JSONB
@@ -26,13 +36,16 @@ CREATE TABLE IF NOT EXISTS users (
   department TEXT, title TEXT, avatar TEXT, data JSONB
 );
 CREATE TABLE IF NOT EXISTS letters (
-  id TEXT PRIMARY KEY, tracking_number TEXT, type TEXT, status TEXT, priority TEXT,
+  id TEXT PRIMARY KEY, tracking_number TEXT, type TEXT, type_label TEXT, status TEXT, status_label TEXT, priority TEXT,
   subject TEXT, sender_organization TEXT, sender TEXT, recipient TEXT,
   route_department TEXT, current_department TEXT, registry_number TEXT, letter_number TEXT,
   letter_date TEXT, attachments INTEGER, remarks TEXT, due_at TEXT,
   received_at TEXT, dispatched_at TEXT, created_at TEXT, updated_at TEXT,
   created_by TEXT, created_by_department TEXT, data JSONB
 );
+-- Make sure the readable label columns exist even on databases created earlier.
+ALTER TABLE letters ADD COLUMN IF NOT EXISTS type_label TEXT;
+ALTER TABLE letters ADD COLUMN IF NOT EXISTS status_label TEXT;
 CREATE TABLE IF NOT EXISTS letter_movements (
   id TEXT PRIMARY KEY, letter_id TEXT, title TEXT, actor TEXT, department TEXT,
   status TEXT, at TEXT, note TEXT, data JSONB
@@ -59,11 +72,11 @@ const TABLES = {
   },
   letters: {
     array: letters,
-    columns: ['id', 'tracking_number', 'type', 'status', 'priority', 'subject', 'sender_organization',
+    columns: ['id', 'tracking_number', 'type', 'type_label', 'status', 'status_label', 'priority', 'subject', 'sender_organization',
       'sender', 'recipient', 'route_department', 'current_department', 'registry_number', 'letter_number',
       'letter_date', 'attachments', 'remarks', 'due_at', 'received_at', 'dispatched_at', 'created_at',
       'updated_at', 'created_by', 'created_by_department'],
-    values: (l) => [l.id, l.trackingNumber, l.type, l.status, l.priority, l.subject, l.senderOrganization,
+    values: (l) => [l.id, l.trackingNumber, l.type, TYPE_LABELS[l.type] || l.type, l.status, STATUS_LABELS[l.status] || l.status, l.priority, l.subject, l.senderOrganization,
       l.sender, l.recipient, l.routeDepartment, l.currentDepartment, l.registryNumber, l.letterNumber,
       l.letterDate, Number(l.attachments) || 0, l.remarks, l.dueAt, l.receivedAt, l.dispatchedAt,
       l.createdAt, l.updatedAt, l.createdBy, l.createdByDepartment]

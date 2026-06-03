@@ -118,7 +118,7 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
 
   return (
     <>
-      <div className={embedded ? 'overflow-x-auto rounded-xl' : 'table-shell'}>
+      <div className={embedded ? 'overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10' : 'table-shell'}>
         <table className="table-fixed text-left text-sm" style={{ width: `${tableWidth}px`, minWidth: `${tableWidth}px` }}>
           <colgroup>
             {columnWidths.map((width, index) => (
@@ -136,7 +136,7 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-white/5">
             {rows.map((letter) => (
-              <tr key={letter.id} className="group transition-colors hover:bg-blue-50/40 dark:hover:bg-white/5">
+              <tr key={letter.id} className="group bg-white transition-colors odd:bg-slate-50/50 hover:bg-blue-50/60 dark:bg-transparent dark:odd:bg-white/5 dark:hover:bg-white/10">
                 <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{displayDateTime(letter)}</td>
                 <td className="px-4 py-4 font-semibold text-cobalt dark:text-blue-300">
                   <Link to={`/letters/${letter.id}`} className="hover:underline">{letter.trackingNumber}</Link>

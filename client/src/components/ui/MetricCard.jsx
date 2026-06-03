@@ -68,7 +68,7 @@ export function MetricCard({ icon: Icon, label, description, value, tone = 'blue
 
       <div className="relative flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={`${compact ? 'h-16 overflow-hidden text-[13px] leading-5' : 'text-[15px] leading-6'} font-semibold text-slate-500 dark:text-slate-300`}>{label}</p>
+          <p className={`${compact ? 'h-20 text-[13px] leading-5' : 'text-[15px] leading-6'} font-semibold text-slate-500 dark:text-slate-300`}>{label}</p>
           <p className={`${compact ? 'text-[34px]' : 'mt-2 text-4xl'} font-black leading-none tracking-[-0.03em] text-[#0b2348] dark:text-white`}>{value}</p>
           {!compact && description && <p className="relative mt-3 max-w-[15rem] text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300">{description}</p>}
         </div>
