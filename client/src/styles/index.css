@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Segoe UI, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body::selection {
+  background: rgba(227, 30, 47, 0.18);
+}
+
+select,
+input[type='date'] {
+  color-scheme: light;
+}
+
+select option {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.dark select,
+.dark input[type='date'] {
+  color-scheme: dark;
+}
+
+.dark select option {
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-transparent;
+  }
+
+  .primary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-purcBlue px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-blue-900/20 transition hover:bg-ink disabled:opacity-60;
+  }
+
+  /* Soft, non-filled action button — tinted background with coloured text. */
+  .soft-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2 text-sm font-semibold text-purcBlue transition hover:bg-blue-100 disabled:opacity-60 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200 dark:hover:bg-blue-950/50;
+  }
+
+  .secondary-button {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-200 dark:hover:bg-white/10;
+  }
+
+  .icon-button {
+    @apply grid h-10 w-10 place-items-center rounded-lg border border-slate-200 bg-white/80 text-slate-600 transition hover:bg-white hover:text-slate-950 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-slate-200 bg-white/90 px-3 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-blue-300;
+  }
+
+  .purc-red-rule {
+    @apply h-1.5 w-16 rounded-full bg-purcRed;
+  }
+
+  .section-title {
+    @apply text-sm text-ink dark:text-white;
+  }
+
+  .table-shell {
+    @apply overflow-hidden overflow-x-auto rounded-xl border border-slate-200/70 bg-transparent dark:border-white/10;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.45);
+  border-radius: 999px;
+}
