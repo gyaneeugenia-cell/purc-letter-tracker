@@ -6,6 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { env } from './config/env.js';
+import { initPersistence } from './config/persistence.js';
 import { authenticate } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { authRouter } from './modules/auth/auth.routes.js';
@@ -59,6 +60,9 @@ if (fs.existsSync(clientDist)) {
 app.use(notFound);
 app.use(errorHandler);
 
-app.listen(env.port, () => {
-  console.log(`PURC API listening on http://localhost:${env.port}/api`);
+// Initialise optional database persistence, then start serving.
+initPersistence().finally(() => {
+  app.listen(env.port, () => {
+    console.log(`PURC API listening on http://localhost:${env.port}/api`);
+  });
 });
