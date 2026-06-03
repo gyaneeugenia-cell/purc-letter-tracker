@@ -10,8 +10,8 @@ const administratorSubject = 'PURC Tracker Administrator Support';
 
 export default function Login() {
   const { user, login, register } = useAuth();
-  const [email, setEmail] = useState(administratorEmail);
-  const [password, setPassword] = useState('Password123!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [supportModal, setSupportModal] = useState(null);
   const [signupOpen, setSignupOpen] = useState(false);
@@ -86,14 +86,14 @@ export default function Login() {
               <label className="block text-left">
                 <span className="text-sm font-bold text-slate-700">Email</span>
                 <div className="relative mt-2">
-                  <input className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={email} onChange={(event) => setEmail(event.target.value)} />
+                  <input type="email" autoComplete="email" placeholder="Enter your email" className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={email} onChange={(event) => setEmail(event.target.value)} />
                   <UserRound className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 </div>
               </label>
               <label className="block text-left">
                 <span className="text-sm font-bold text-slate-700">Password</span>
                 <div className="relative mt-2">
-                  <input type={showPassword ? 'text' : 'password'} className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={password} onChange={(event) => setPassword(event.target.value)} />
+                  <input type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Enter your password" className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={password} onChange={(event) => setPassword(event.target.value)} />
                   <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm p-2 text-slate-500 hover:bg-slate-100 hover:text-ink" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
