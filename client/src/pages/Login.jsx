@@ -8,11 +8,17 @@ import { purcDepartments } from '../constants/departments.js';
 const administratorEmail = 'gyaneeugenia@gmail.com';
 const administratorSubject = 'PURC Tracker Administrator Support';
 
+// Basic but solid email format check.
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
 export default function Login() {
   const { user, login, register } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [supportModal, setSupportModal] = useState(null);
   const [signupOpen, setSignupOpen] = useState(false);
   const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', department: 'Executive Secretary', title: 'Officer' });
@@ -23,6 +29,10 @@ export default function Login() {
 
   async function onSubmit(event) {
     event.preventDefault();
+    if (!isValidEmail(email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -36,6 +46,14 @@ export default function Login() {
 
   async function onSignup(event) {
     event.preventDefault();
+    if (!isValidEmail(signupForm.email)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+    if (String(signupForm.password).length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -61,7 +79,7 @@ export default function Login() {
   const administratorMailUrl = `mailto:${administratorEmail}?subject=${encodeURIComponent(administratorSubject)}&body=${encodeURIComponent(administratorMailBody)}`;
 
   return (
-    <div className="fixed inset-0 overflow-hidden bg-[#f7f9fd] text-slate-950">
+    <div className="min-h-screen overflow-y-auto bg-[#f7f9fd] text-slate-950">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_85%,rgba(70,91,168,0.14),transparent_28%),radial-gradient(circle_at_82%_50%,rgba(227,30,47,0.12),transparent_30%)]" />
       <img src="/purc_logo.bmp" alt="" className="pointer-events-none fixed left-1/2 top-1/2 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 object-contain opacity-[0.035] mix-blend-multiply" />
       <div className="pointer-events-none fixed right-[9%] top-[37%] h-52 w-36 rounded-[45%] border border-red-100/70 bg-[radial-gradient(circle,rgba(227,30,47,0.10)_1px,transparent_1px)] [background-size:8px_8px]" />
@@ -76,7 +94,7 @@ export default function Login() {
       </header>
 
       <main className="relative">
-        <div className="mx-auto flex h-[calc(100vh-80px)] max-w-5xl items-start justify-center px-6 pb-4 pt-1">
+        <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl items-start justify-center px-6 pb-8 pt-1">
           <section className="flex w-full items-center justify-center">
           <form onSubmit={onSubmit} className="w-full max-w-lg rounded-xl border border-slate-200/80 bg-white/95 p-5 text-center shadow-[0_24px_90px_rgba(6,29,58,0.16)] backdrop-blur md:p-6">
             <div className="purc-red-rule mx-auto" />
@@ -153,15 +171,15 @@ export default function Login() {
         <form onSubmit={onSignup} className="grid gap-4 md:grid-cols-2">
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
             Full name
-            <input className="input" placeholder="e.g. Efua Boateng" value={signupForm.name} onChange={(event) => setSignupForm({ ...signupForm, name: event.target.value })} required />
+            <input className="input" value={signupForm.name} onChange={(event) => setSignupForm({ ...signupForm, name: event.target.value })} required />
           </label>
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
-            Official email
-            <input className="input" type="email" placeholder="name@purc.gov" value={signupForm.email} onChange={(event) => setSignupForm({ ...signupForm, email: event.target.value })} required />
+            Email
+            <input className="input" type="email" value={signupForm.email} onChange={(event) => setSignupForm({ ...signupForm, email: event.target.value })} required />
           </label>
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
             Job title
-            <input className="input" placeholder="Officer, Assistant, Director..." value={signupForm.title} onChange={(event) => setSignupForm({ ...signupForm, title: event.target.value })} />
+            <input className="input" value={signupForm.title} onChange={(event) => setSignupForm({ ...signupForm, title: event.target.value })} />
           </label>
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
             Directorate
@@ -171,7 +189,12 @@ export default function Login() {
           </label>
           <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500 md:col-span-2">
             Create password
-            <input className="input" type="password" placeholder="Minimum 8 characters" value={signupForm.password} onChange={(event) => setSignupForm({ ...signupForm, password: event.target.value })} required />
+            <div className="relative">
+              <input className="input pr-12" type={showSignupPassword ? 'text' : 'password'} placeholder="Minimum 8 characters" value={signupForm.password} onChange={(event) => setSignupForm({ ...signupForm, password: event.target.value })} required />
+              <button type="button" onClick={() => setShowSignupPassword((value) => !value)} className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-ink" aria-label={showSignupPassword ? 'Hide password' : 'Show password'}>
+                {showSignupPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
           {error && <p className="md:col-span-2 rounded-sm bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed">{error}</p>}
           <button className="primary-button md:col-span-2" disabled={loading}>{loading ? 'Creating account...' : 'Register and enter system'}</button>
