@@ -1,21 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Clock3, Search, Send, Sparkles } from 'lucide-react';
+import { CheckCircle2, Clock3, Search, Send } from 'lucide-react';
 import { http } from '../api/http.js';
 import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
-import { statusLabels } from '../constants/statuses.js';
 import { StatusChip } from '../components/ui/StatusChip.jsx';
 
 const incomingStages = [
-  { status: 'ES_RECEIVED', label: 'Pending internal dispatch', tone: 'blue' },
-  { status: 'DISPATCHED_TO_DEPARTMENT', label: 'Dispatched internally', tone: 'amber' }
+  { status: 'ES_RECEIVED', label: 'Received Letters at ES', tone: 'blue' },
+  { status: 'DISPATCHED_TO_DEPARTMENT', label: 'Received Letters Dispatched', tone: 'amber' }
 ];
 
 const outgoingStages = [
-  { status: 'READY_FOR_SIGNATURE', label: 'Pending external dispatch', tone: 'amber' },
-  { status: 'DISPATCHED', label: 'Dispatched externally', tone: 'emerald' }
+  { status: 'READY_FOR_SIGNATURE', label: 'Letters for sending still at ES', tone: 'amber' },
+  { status: 'DISPATCHED', label: 'Letters Sent', tone: 'emerald' }
 ];
 
 const toneClasses = {
@@ -113,15 +112,6 @@ export default function Timeline() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-lg border border-slate-200/70 bg-slate-50/80 p-3 dark:border-white/10 dark:bg-white/5">
-                  <div className="flex items-start gap-2">
-                    <Sparkles className="mt-0.5 text-purcBlue dark:text-blue-300" size={16} />
-                    <div>
-                      <p className="text-sm font-black text-slate-700 dark:text-slate-100">{letter.inferredAction || statusLabels[letter.status]}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">{letter.inferenceReason || 'Status is based on the latest saved record.'}</p>
-                    </div>
-                  </div>
-                </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   {stages.map((step, index) => {

@@ -19,13 +19,13 @@ let enabled = false;
 
 // Friendly labels so the database is readable in pgAdmin (alongside the codes).
 const STATUS_LABELS = {
-  ES_RECEIVED: 'Pending internal dispatch',
-  DISPATCHED_TO_DEPARTMENT: 'Dispatched internally',
-  READY_FOR_SIGNATURE: 'Pending external dispatch',
-  DISPATCHED: 'Dispatched externally',
+  ES_RECEIVED: 'Received Letters at ES',
+  DISPATCHED_TO_DEPARTMENT: 'Received Letters Dispatched',
+  READY_FOR_SIGNATURE: 'Letters for sending still at ES',
+  DISPATCHED: 'Letters Sent',
   ARCHIVED: 'Archived'
 };
-const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Sent' };
+const TYPE_LABELS = { INCOMING: 'Received Letters', OUTGOING: 'Letters for sending' };
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS departments (

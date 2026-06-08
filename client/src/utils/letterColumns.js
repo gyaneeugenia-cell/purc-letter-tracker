@@ -16,23 +16,15 @@ function institutionOrRecipient(letter) {
     : (letter.recipient || '-');
 }
 
-function followUp(letter) {
-  if (!letter.dueAt) return 'Not set';
-  const d = new Date(letter.dueAt);
-  return Number.isNaN(d.getTime()) ? 'Not set' : d.toLocaleDateString('en-GB');
-}
-
 // Full column set for letter registers / search / timeline exports
 export const letterExportColumns = [
   { header: 'Date', accessor: fmtDate },
   { header: 'Reference No.', accessor: (l) => l.trackingNumber || '-' },
-  { header: 'Type', accessor: (l) => (l.type === 'INCOMING' ? 'Received' : 'Sent') },
+  { header: 'Type', accessor: (l) => (l.type === 'INCOMING' ? 'Received Letters' : 'Letters for sending') },
   { header: 'Registry No.', accessor: (l) => l.registryNumber || '-' },
   { header: 'Institution / Recipient', accessor: institutionOrRecipient },
   { header: 'Subject', accessor: (l) => l.subject || '-' },
   { header: 'Directorate', accessor: (l) => l.routeDepartment || l.currentDepartment || '-' },
   { header: 'Status', accessor: (l) => statusLabels[l.status] || l.status || '-' },
-  { header: 'Follow-up Date', accessor: followUp },
-  { header: 'Attachment', accessor: (l) => (Number(l.attachments) > 0 ? 'Yes' : 'No') },
   { header: 'Remarks', accessor: (l) => l.remarks || '-' }
 ];

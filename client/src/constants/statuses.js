@@ -1,19 +1,19 @@
 export const statusLabels = {
-  ES_RECEIVED: 'Pending internal dispatch',
-  DISPATCHED_TO_DEPARTMENT: 'Dispatched internally',
-  READY_FOR_SIGNATURE: 'Pending external dispatch',
-  DISPATCHED: 'Dispatched externally',
+  ES_RECEIVED: 'Received Letters at ES',
+  DISPATCHED_TO_DEPARTMENT: 'Received Letters Dispatched',
+  READY_FOR_SIGNATURE: 'Letters for sending still at ES',
+  DISPATCHED: 'Letters Sent',
   ARCHIVED: 'Archived'
 };
 
 export const incomingStatusOptions = [
-  { value: 'ES_RECEIVED', label: 'Pending internal dispatch' },
-  { value: 'DISPATCHED_TO_DEPARTMENT', label: 'Dispatched internally' }
+  { value: 'ES_RECEIVED', label: 'Received Letters at ES' },
+  { value: 'DISPATCHED_TO_DEPARTMENT', label: 'Received Letters Dispatched' }
 ];
 
 export const outgoingStatusOptions = [
-  { value: 'READY_FOR_SIGNATURE', label: 'Pending external dispatch' },
-  { value: 'DISPATCHED', label: 'Dispatched externally' }
+  { value: 'READY_FOR_SIGNATURE', label: 'Letters for sending still at ES' },
+  { value: 'DISPATCHED', label: 'Letters Sent' }
 ];
 
 export const allStatusOptions = [

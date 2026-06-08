@@ -4,8 +4,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 
 const pageTitles = [
   { match: (path) => path === '/', eyebrow: 'Operations command center', title: 'Dashboard' },
-  { match: (path) => path.startsWith('/incoming'), eyebrow: 'ES intake', title: 'Received Letters' },
-  { match: (path) => path.startsWith('/outgoing'), eyebrow: 'Dispatch workflow', title: 'Letters Sent' },
+  { match: (path) => path.startsWith('/incoming'), eyebrow: 'ES intake', title: 'Received Letter Register' },
+  { match: (path) => path.startsWith('/outgoing'), eyebrow: 'Dispatch workflow', title: 'Letters For Sending Register' },
   { match: (path) => path.startsWith('/search'), eyebrow: 'Enterprise retrieval', title: 'Search' },
   { match: (path) => path.startsWith('/timeline'), eyebrow: 'Chain of custody', title: 'Tracking Timeline' },
   { match: (path) => path.startsWith('/analytics'), eyebrow: 'Executive intelligence', title: 'Analytics Dashboard' },

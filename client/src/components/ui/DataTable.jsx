@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Paperclip } from 'lucide-react';
 import { Modal } from './Modal.jsx';
 import { StatusChip } from './StatusChip.jsx';
 import { PriorityBadge } from './PriorityBadge.jsx';
@@ -30,20 +29,10 @@ function recipientDepartment(letter) {
   return '-';
 }
 
-function attachmentLabel(letter) {
-  return Number(letter.attachments) > 0 ? 'Yes' : 'No';
-}
-
 function institutionOrRecipient(letter) {
   return letter.type === 'INCOMING'
     ? (letter.senderOrganization || letter.sender || '-')
     : (letter.recipient || '-');
-}
-
-function followUpDate(letter) {
-  if (!letter.dueAt) return 'Not set';
-  const date = new Date(letter.dueAt);
-  return Number.isNaN(date.getTime()) ? 'Not set' : date.toLocaleDateString();
 }
 
 export function DataTable({ rows = [], embedded = false, operational = false, letterType = '', statusOptions = [], onStatusChange }) {
@@ -54,15 +43,15 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
   const canChangeStatus = typeof onStatusChange === 'function' && statusOptions.length > 0;
   const showRecipientDepartment = letterType === 'INCOMING';
   const standardHeaders = showRecipientDepartment
-    ? ['Date', 'Reference No.', 'Institution', 'From Whom Sent', 'Registry Number', 'Subject', 'Recipient Directorate', 'Status', 'Follow-up Date', 'Attachment', 'Remarks']
-    : ['Date', 'Reference No.', 'Recipient Institution', 'Registry Number', 'Subject', 'Responsible Directorate', 'Status', 'Follow-up Date', 'Attachment', 'Remarks'];
-  const operationalHeaders = ['Date', 'Reference No.', 'Type', 'Institution / Recipient', 'Subject', 'Status', 'Follow-up Date', 'Attachment'];
+    ? ['Date', 'Reference No.', 'Institution', 'From Whom Sent', 'Registry Number', 'Subject', 'Recipient Directorate', 'Status', 'Remarks']
+    : ['Date', 'Reference No.', 'Recipient Institution', 'Registry Number', 'Subject', 'Responsible Directorate', 'Status', 'Remarks'];
+  const operationalHeaders = ['Date', 'Reference No.', 'Type', 'Institution / Recipient', 'Subject', 'Status'];
   const baseHeaders = operational ? operationalHeaders : standardHeaders;
   const headers = canChangeStatus && !operational ? [...baseHeaders, 'Letter Status'] : baseHeaders;
   const standardColumnWidths = showRecipientDepartment
-    ? [130, 180, 190, 160, 140, 220, 200, 190, 140, 120, 220]
-    : [130, 180, 190, 140, 240, 200, 190, 140, 120, 220];
-  const baseColumnWidths = operational ? [130, 180, 110, 190, 260, 190, 140, 120] : standardColumnWidths;
+    ? [130, 180, 190, 160, 140, 220, 200, 190, 220]
+    : [130, 180, 190, 140, 240, 200, 190, 220];
+  const baseColumnWidths = operational ? [130, 180, 130, 190, 280, 190] : standardColumnWidths;
   const columnWidths = canChangeStatus && !operational ? [...baseColumnWidths, 190] : baseColumnWidths;
   const tableWidth = columnWidths.reduce((total, width) => total + width, 0);
 
@@ -143,17 +132,10 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
                 </td>
                 {operational ? (
                   <>
-                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{letter.type === 'INCOMING' ? 'Received' : 'Sent'}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{letter.type === 'INCOMING' ? 'Received Letters' : 'Letters for sending'}</td>
                     <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{institutionOrRecipient(letter)}</td>
                     <td className="max-w-sm px-4 py-4 text-slate-800 dark:text-slate-100">{letter.subject}</td>
                     <td className="px-4 py-4"><StatusChip status={letter.status} /></td>
-                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{followUpDate(letter)}</td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${Number(letter.attachments) > 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
-                        <Paperclip size={14} />
-                        {attachmentLabel(letter)}
-                      </span>
-                    </td>
                   </>
                 ) : (
                   <>
@@ -169,13 +151,6 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
                         <StatusChip status={letter.status} />
                         <PriorityBadge priority={letter.priority} />
                       </div>
-                    </td>
-                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{followUpDate(letter)}</td>
-                    <td className="px-4 py-4">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${Number(letter.attachments) > 0 ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'}`}>
-                        <Paperclip size={14} />
-                        {attachmentLabel(letter)}
-                      </span>
                     </td>
                     <td className="px-4 py-4">
                       <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">{letter.remarks || 'No Remarks'}</p>

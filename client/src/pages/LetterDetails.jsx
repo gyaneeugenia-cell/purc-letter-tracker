@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, FileText, Paperclip, Pencil, Route, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Pencil, Route, Trash2 } from 'lucide-react';
 import { http } from '../api/http.js';
 import { notifyLettersChanged } from '../api/letterEvents.js';
 import { StatusChip } from '../components/ui/StatusChip.jsx';
@@ -66,7 +66,7 @@ function displayDestination(letter) {
 }
 
 function displayType(letter) {
-  return letter.type === 'INCOMING' ? 'Received' : 'Sent';
+  return letter.type === 'INCOMING' ? 'Received Letters' : 'Letters for sending';
 }
 
 export default function LetterDetails() {
@@ -247,10 +247,8 @@ export default function LetterDetails() {
         ['Reference', letter.trackingNumber],
         ['Registry number', letter.registryNumber],
         ['No. of letter', letter.letterNumber],
-        ['Came with attachment', Number(letter.attachments) > 0 ? 'Yes' : 'No'],
         ['PURC directorate the letter came from', sourceDepartmentForLetter(letter)],
         ['Recipient institution', letter.recipient],
-        ['Follow-up date', letter.dueAt ? new Date(letter.dueAt).toLocaleDateString() : '-'],
         ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-']
       ]
     : [
@@ -258,12 +256,10 @@ export default function LetterDetails() {
         ['Reference', letter.trackingNumber],
         ['Registry number', letter.registryNumber],
         ['No. of letter', letter.letterNumber],
-        ['Came with attachment', Number(letter.attachments) > 0 ? 'Yes' : 'No'],
         ['Institution letter came from', letter.senderOrganization || letter.sender],
         ['From whom sent / signatory', letter.sender],
         ['Recipient directorate', letter.routeDepartment],
         ['Recipient named on letter', letter.recipient],
-        ['Follow-up date', letter.dueAt ? new Date(letter.dueAt).toLocaleDateString() : '-'],
         ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-']
       ];
 
@@ -443,25 +439,11 @@ export default function LetterDetails() {
               )}
             </>
           )}
-          <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-700 md:col-span-2">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-purcBlue"
-              checked={Number(editForm.attachments) > 0}
-              onChange={(event) => setEditForm({ ...editForm, attachments: event.target.checked ? 1 : 0 })}
-            />
-            <Paperclip size={16} />
-            Letter came with attachment
-          </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Priority
             <select className="input" value={editForm.priority} onChange={(event) => setEditForm({ ...editForm, priority: event.target.value })}>
-              <option>NORMAL</option><option>HIGH</option><option>URGENT</option><option>LOW</option>
+              <option>NORMAL</option><option>URGENT</option>
             </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Follow-up date (optional)
-            <input className="input" type="date" value={editForm.dueAt} onChange={(event) => setEditForm({ ...editForm, dueAt: event.target.value })} />
           </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             {letter.type === 'INCOMING' ? 'Directorate to route to' : 'Directorate responsible for letter'}

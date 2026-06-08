@@ -7,10 +7,10 @@ import { inferLetterMovement, applyRemarkIntelligence, enrichLetterWithRemarkInt
 export const lettersRouter = Router();
 
 const workflowLabels = {
-  ES_RECEIVED: 'Pending internal dispatch',
-  DISPATCHED_TO_DEPARTMENT: 'Dispatched internally',
-  READY_FOR_SIGNATURE: 'Pending external dispatch',
-  DISPATCHED: 'Dispatched externally',
+  ES_RECEIVED: 'Received Letters at ES',
+  DISPATCHED_TO_DEPARTMENT: 'Received Letters Dispatched',
+  READY_FOR_SIGNATURE: 'Letters for sending still at ES',
+  DISPATCHED: 'Letters Sent',
   ARCHIVED: 'Archived'
 };
 

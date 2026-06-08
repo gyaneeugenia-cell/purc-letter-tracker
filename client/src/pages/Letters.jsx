@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Filter, Inbox, Loader2, Paperclip, Plus, Search, Send, XCircle } from 'lucide-react';
+import { CheckCircle2, Filter, Inbox, Loader2, Plus, Search, Send, XCircle } from 'lucide-react';
 import { http } from '../api/http.js';
 import { notifyLettersChanged } from '../api/letterEvents.js';
 import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
@@ -215,14 +215,14 @@ export default function Letters({ type }) {
             {type === 'INCOMING' ? <Inbox size={22} /> : <Send size={22} />}
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letters' : 'Letters Sent'}</h1>
+            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}</h1>
             <div className="mt-1"><PeriodLabel timeRange={timeRange} /></div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register letter for sending'}</button>
           <ExportButtons
-            title={type === 'INCOMING' ? 'Received Letters' : 'Letters Sent'}
+            title={type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}
             periodLabel={formatRangeLabel(timeRange)}
             columns={letterExportColumns}
             rows={filteredLetters}
@@ -250,9 +250,7 @@ export default function Letters({ type }) {
           <select className="input" value={priority} onChange={(event) => setPriority(event.target.value)}>
             <option value="">All priorities</option>
             <option value="URGENT">Urgent</option>
-            <option value="HIGH">High</option>
             <option value="NORMAL">Normal</option>
-            <option value="LOW">Low</option>
           </select>
           <button type="button" className="secondary-button" onClick={resetFilters}><Filter size={16} /> Reset</button>
         </div>
@@ -263,7 +261,7 @@ export default function Letters({ type }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4 dark:border-white/10">
           <div>
             <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">
-              {type === 'INCOMING' ? 'Received Letters Record' : 'Sent Letters Record'}
+              {type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}
             </h2>
             <p className="mt-0.5 text-xs font-medium text-slate-400">Select a reference number to open the letter's details.</p>
           </div>
@@ -337,25 +335,11 @@ export default function Letters({ type }) {
               )}
             </>
           )}
-          <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-bold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-purcBlue"
-              checked={Number(form.attachments) > 0}
-              onChange={(e) => setForm({ ...form, attachments: e.target.checked ? 1 : 0 })}
-            />
-            <Paperclip size={16} />
-            Letter came with attachment
-          </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Priority
             <select className="input" value={form.priority || 'NORMAL'} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-              <option>NORMAL</option><option>HIGH</option><option>URGENT</option><option>LOW</option>
+              <option>NORMAL</option><option>URGENT</option>
             </select>
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            Follow-up date (optional)
-            <input className="input" type="date" value={form.dueAt} onChange={(e) => setForm({ ...form, dueAt: e.target.value })} />
           </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             {type === 'INCOMING' ? 'Directorate to route to' : 'Directorate responsible for letter'}

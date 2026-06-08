@@ -110,8 +110,8 @@ export default function Search() {
             Letter type
             <select className="input" value={type} onChange={(event) => changeType(event.target.value)}>
               <option value="">All letter types</option>
-              <option value="INCOMING">Letters Received</option>
-              <option value="OUTGOING">Letters Sent</option>
+              <option value="INCOMING">Received Letters</option>
+              <option value="OUTGOING">Letters for sending</option>
             </select>
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
@@ -126,9 +126,7 @@ export default function Search() {
             <select className="input" value={priority} onChange={(event) => setPriority(event.target.value)}>
               <option value="">All priorities</option>
               <option value="URGENT">Urgent</option>
-              <option value="HIGH">High</option>
               <option value="NORMAL">Normal</option>
-              <option value="LOW">Low</option>
             </select>
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
