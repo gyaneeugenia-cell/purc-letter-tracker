@@ -215,14 +215,14 @@ export default function Letters({ type }) {
             {type === 'INCOMING' ? <Inbox size={22} /> : <Send size={22} />}
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}</h1>
+            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}</h1>
             <div className="mt-1"><PeriodLabel timeRange={timeRange} /></div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register letter for sending'}</button>
+          <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register outgoing letter'}</button>
           <ExportButtons
-            title={type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}
+            title={type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}
             periodLabel={formatRangeLabel(timeRange)}
             columns={letterExportColumns}
             rows={filteredLetters}
@@ -261,7 +261,7 @@ export default function Letters({ type }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4 dark:border-white/10">
           <div>
             <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">
-              {type === 'INCOMING' ? 'Received Letter Register' : 'Letters For Sending Register'}
+              {type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}
             </h2>
             <p className="mt-0.5 text-xs font-medium text-slate-400">Select a reference number to open the letter's details.</p>
           </div>
@@ -280,7 +280,7 @@ export default function Letters({ type }) {
           )}
         </div>
       </section>
-      <Modal open={open} title={type === 'INCOMING' ? 'Register Received Letter' : 'Register Letter for Sending'} onClose={() => { setOpen(false); setFormError(''); }}>
+      <Modal open={open} title={type === 'INCOMING' ? 'Register Received Letter' : 'Register Outgoing Letter'} onClose={() => { setOpen(false); setFormError(''); }}>
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
           {formError && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed md:col-span-2">

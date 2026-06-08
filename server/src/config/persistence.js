@@ -21,11 +21,11 @@ let enabled = false;
 const STATUS_LABELS = {
   ES_RECEIVED: 'Received Letter at ES',
   DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Letter for sending still at ES',
+  READY_FOR_SIGNATURE: 'Outgoing letter still at ES',
   DISPATCHED: 'Letter Sent',
   ARCHIVED: 'Archived'
 };
-const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'For Sending' };
+const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Outgoing' };
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS departments (

@@ -61,11 +61,6 @@ export function MetricCard({ icon: Icon, label, description, value, tone = 'blue
       {/* thin coloured top bar */}
       <div className={`absolute inset-x-4 top-0 h-1 rounded-b-full bg-gradient-to-r ${style.bar}`} />
 
-      {/* faint bottom wave */}
-      <svg className="pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full" viewBox="0 0 400 40" preserveAspectRatio="none" aria-hidden="true">
-        <path d="M0,22 C80,4 150,34 220,20 C290,6 350,26 400,16 L400,40 L0,40 Z" className={style.wave} />
-      </svg>
-
       {/* label row + icon */}
       <div className="relative flex items-start justify-between gap-3">
         <p className={`min-w-0 ${compact ? 'text-[13px] leading-5' : 'text-[15px] leading-6'} font-semibold text-slate-500 dark:text-slate-300`}>{label}</p>

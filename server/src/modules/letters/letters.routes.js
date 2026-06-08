@@ -9,7 +9,7 @@ export const lettersRouter = Router();
 const workflowLabels = {
   ES_RECEIVED: 'Received Letter at ES',
   DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Letter for sending still at ES',
+  READY_FOR_SIGNATURE: 'Outgoing letter still at ES',
   DISPATCHED: 'Letter Sent',
   ARCHIVED: 'Archived'
 };

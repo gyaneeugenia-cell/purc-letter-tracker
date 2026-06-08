@@ -66,7 +66,7 @@ function displayDestination(letter) {
 }
 
 function displayType(letter) {
-  return letter.type === 'INCOMING' ? 'Received' : 'For Sending';
+  return letter.type === 'INCOMING' ? 'Received' : 'Outgoing';
 }
 
 export default function LetterDetails() {

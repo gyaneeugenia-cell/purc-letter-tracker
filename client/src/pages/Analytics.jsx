@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { Activity, TrendingUp } from 'lucide-react';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useEffect, useRef, useState } from 'react';
+import { TrendingUp } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { http } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
-import { ExportButtons } from '../components/ui/ExportButtons.jsx';
+import { ChartExport } from '../components/ui/ChartExport.jsx';
 
 // Bright but lightened palette — vivid without straining
 const CHART = {
@@ -38,6 +38,9 @@ export default function Analytics() {
   const { theme } = useAuth();
   const [data, setData] = useState(null);
   const { timeRange, groupBy } = usePersistentPeriod();
+  const flowChartRef = useRef(null);
+  const deptChartRef = useRef(null);
+  const priorityChartRef = useRef(null);
 
   useEffect(() => {
     http.get('/dashboard/summary', { params: { from: timeRange.from, to: timeRange.to, groupBy } }).then((res) => setData(res.data));
@@ -99,25 +102,8 @@ export default function Analytics() {
         <p className="font-semibold text-purcBlue dark:text-blue-300">Total Letters Received: {received}</p>
         <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Sent: {dispatched}</p>
         {awaiting > 0 && (
-          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Letters for sending still at ES: {awaiting}</p>
+          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Outgoing letters still at ES: {awaiting}</p>
         )}
-      </div>
-    );
-  }
-
-  function TrendTooltip({ active, payload, label }) {
-    if (!active || !payload?.length) return null;
-    const bucket = payload[0]?.payload;
-    const received = bucket?.incoming ?? 0;
-    const dispatched = bucket?.dispatchedExternally ?? 0;
-    const awaiting = bucket?.awaitingDispatch ?? 0;
-    return (
-      <div className="min-w-[230px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
-        <p className="mb-2 font-bold text-ink dark:text-white">{bucket?.tooltipLabel || label}</p>
-        <p className="font-semibold text-teal dark:text-teal-300">Total letters: {bucket?.total ?? 0}</p>
-        <p className="mt-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">{received} received</p>
-        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{dispatched} sent</p>
-        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{awaiting} for sending still at ES</p>
       </div>
     );
   }
@@ -154,14 +140,14 @@ export default function Analytics() {
                 Received Letters at ES: {d.incomingAtEs ?? 0}
               </span>
               <span className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white">
-                Letters for sending still at ES: {d.outgoingAtEs ?? 0}
+                Outgoing letters still at ES: {d.outgoingAtEs ?? 0}
               </span>
             </div>
             <p className="mt-3 text-xs font-medium text-slate-400">
               <span className="font-semibold text-slate-600 dark:text-slate-300">Received Letters at ES</span> = letters received by ES from external bodies not yet dispatched internally.
             </p>
             <p className="mt-1 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Letters for sending still at ES</span> = outgoing letters still at ES not yet sent out.
+              <span className="font-semibold text-slate-600 dark:text-slate-300">Outgoing letters still at ES</span> = outgoing letters still at ES not yet sent out.
             </p>
           </>
         ) : (
@@ -202,26 +188,29 @@ export default function Analytics() {
 
   // ── Render ───────────────────────────────────────────────────────
 
-  const analyticsExportColumns = [
+  const periodLabel = formatRangeLabel(timeRange);
+  const deptExportColumns = [
     { header: 'Directorate Code', accessor: (d) => d.code },
     { header: 'Directorate', accessor: (d) => d.name },
     { header: 'Total Letters', accessor: (d) => d.workload },
     { header: 'Received from ES', accessor: (d) => d.received ?? 0 },
     { header: 'Sent through ES', accessor: (d) => d.sent ?? 0 }
   ];
+  const flowExportColumns = [
+    { header: 'Period', accessor: (b) => b.tooltipLabel || b.month },
+    { header: 'Total Letters Received', accessor: (b) => b.incoming },
+    { header: 'Letters Sent', accessor: (b) => b.dispatchedExternally },
+    { header: 'Outgoing letters still at ES', accessor: (b) => b.awaitingDispatch }
+  ];
+  const priorityExportColumns = [
+    { header: 'Priority', accessor: (p) => p.name },
+    { header: 'Percentage', accessor: (p) => `${p.value}%` },
+    { header: 'Letter Count', accessor: (p) => p.count }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <PeriodLabel timeRange={timeRange} />
-        <ExportButtons
-          title="Analytics — Directorate Workload"
-          periodLabel={formatRangeLabel(timeRange)}
-          columns={analyticsExportColumns}
-          rows={data.departments}
-          size="sm"
-        />
-      </div>
+      <PeriodLabel timeRange={timeRange} />
 
       <div className="space-y-6">
 
@@ -237,7 +226,11 @@ export default function Analytics() {
                 Compares letters received by the Commission against letters confirmed as sent out by ES, grouped by the selected period.
               </p>
             </div>
-            <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-purcBlue dark:bg-blue-900/50 dark:text-blue-100">Current operating view</span>
+            <ChartExport
+              getNode={() => flowChartRef.current}
+              baseName="letters-received-vs-sent"
+              excel={{ title: 'Letters Received vs Letters Sent', periodLabel, columns: flowExportColumns, rows: flowData }}
+            />
           </div>
 
           {/* 4 summary stats */}
@@ -245,7 +238,7 @@ export default function Analytics() {
             {[
               { label: 'Total Letters Received', value: incomingTotal, tone: 'text-purcBlue dark:text-blue-200' },
               { label: 'Letters Sent', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
-              { label: 'Letters for sending still at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
+              { label: 'Outgoing letters still at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
               { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', tone: 'text-slate-700 dark:text-slate-100' }
             ].map((item) => (
               <div key={item.label} className="rounded-lg border border-slate-200/70 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
@@ -256,7 +249,7 @@ export default function Analytics() {
           </div>
 
           {/* Bar chart */}
-          <div className="mt-6 h-80">
+          <div ref={flowChartRef} className="mt-6 h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={flowData} margin={{ top: 18, right: 20, left: 0, bottom: 8 }} barGap={10} barCategoryGap={groupBy === 'daily' ? 12 : 28}>
                 <CartesianGrid strokeDasharray="4 6" stroke={gridColor} vertical={false} />
@@ -271,50 +264,25 @@ export default function Analytics() {
           </div>
         </section>
 
-        {/* ── Trend chart: smooth area of total letter activity over time ── */}
-        <section className={`${panelClass} p-6`}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="flex items-center gap-2 text-base font-bold text-ink dark:text-white">
-                <Activity size={18} className="text-teal dark:text-teal-300" />
-                Letter Activity Trend
-              </h2>
-              <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                Overall letter volume (received and sent combined) across the selected period.
-              </p>
-            </div>
-          </div>
-          <div className="mt-6 h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={flowData} margin={{ top: 18, right: 20, left: 0, bottom: 8 }}>
-                <defs>
-                  <linearGradient id="trendFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={CHART.teal} stopOpacity={0.35} />
-                    <stop offset="100%" stopColor={CHART.teal} stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="4 6" stroke={gridColor} vertical={false} />
-                <XAxis dataKey="month" interval={volumeXAxisInterval} minTickGap={4} tickLine={false} axisLine={false} tick={volumeAxisTick} angle={groupBy === 'daily' ? -18 : 0} textAnchor={groupBy === 'daily' ? 'end' : 'middle'} height={groupBy === 'daily' ? 48 : 30} />
-                <YAxis allowDecimals={false} width={38} tickLine={false} axisLine={false} tick={axisTick} />
-                <Tooltip content={<TrendTooltip />} />
-                <Area type="monotone" dataKey="total" name="Total letters" stroke={CHART.teal} strokeWidth={2.5} fill="url(#trendFill)" dot={{ r: 3, fill: CHART.teal, strokeWidth: 0 }} activeDot={{ r: 5 }} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
         {/* ── Charts 2 & 3 side-by-side, equal height ── */}
         <div className="grid gap-6 xl:grid-cols-2 xl:items-stretch">
 
           {/* Directorate Workload */}
           <section className={`${panelClass} flex flex-col p-6`}>
-            <div>
-              <h2 className="text-base font-bold text-ink dark:text-white">Directorate Workload</h2>
-              <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                Total letters handled per directorate in the selected period.
-              </p>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-base font-bold text-ink dark:text-white">Directorate Workload</h2>
+                <p className={`mt-1 text-xs font-medium ${mutedText}`}>
+                  Total letters handled per directorate in the selected period.
+                </p>
+              </div>
+              <ChartExport
+                getNode={() => deptChartRef.current}
+                baseName="directorate-workload"
+                excel={{ title: 'Directorate Workload', periodLabel, columns: deptExportColumns, rows: data.departments }}
+              />
             </div>
-            <div className="mt-5 flex-1" style={{ minHeight: 320 }}>
+            <div ref={deptChartRef} className="mt-5 flex-1" style={{ minHeight: 320 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.departments} margin={{ top: 30, right: 12, left: 0, bottom: 12 }}>
                   <CartesianGrid strokeDasharray="4 6" stroke={gridColor} vertical={false} />
@@ -339,16 +307,18 @@ export default function Analytics() {
 
           {/* Letter Priority Distribution */}
           <section className={`${panelClass} flex flex-col p-6`}>
-            <div>
+            <div className="flex flex-wrap items-start justify-between gap-3">
               <h2 className="text-base font-bold text-ink dark:text-white">Letter Priority Distribution</h2>
-              <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                Breakdown of letters by urgency level — Normal, High, Urgent, and Low — for the selected period.
-              </p>
+              <ChartExport
+                getNode={() => priorityChartRef.current}
+                baseName="letter-priority-distribution"
+                excel={{ title: 'Letter Priority Distribution', periodLabel, columns: priorityExportColumns, rows: priority }}
+              />
             </div>
             {/* Chart + legend — side-by-side, chart fills remaining vertical space */}
             <div className="mt-5 flex flex-1 flex-col items-center gap-6 sm:flex-row sm:items-center">
               {/* Fixed square container guarantees a perfectly circular donut */}
-              <div className="shrink-0" style={{ width: 240, height: 240 }}>
+              <div ref={priorityChartRef} className="shrink-0" style={{ width: 240, height: 240 }}>
                 <PieChart width={240} height={240}>
                   <Pie
                     data={priority}

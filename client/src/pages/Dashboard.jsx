@@ -95,7 +95,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-white/10">
           <div>
-            <h2 className="text-base font-black tracking-tight text-ink dark:text-white">Operational Letter Register</h2>
+            <h2 className="text-base font-black tracking-tight text-ink dark:text-white">Letter Register</h2>
             <p className="mt-0.5 text-xs font-medium text-slate-400">
               Search, sort, and open letters recorded within the selected reporting period.
             </p>
@@ -105,10 +105,10 @@ export default function Dashboard() {
               <Plus size={15} /> Register received letter
             </button>
             <button type="button" className="soft-button" onClick={() => navigate('/outgoing?new=1')}>
-              <Plus size={15} /> Register letter for sending
+              <Plus size={15} /> Register outgoing letter
             </button>
             <ExportButtons
-              title="Operational Letter Register"
+              title="Letter Register"
               periodLabel={rangeLabel}
               columns={letterExportColumns}
               rows={registerLetters}
@@ -135,7 +135,7 @@ export default function Dashboard() {
             <select className="input" value={letterType} onChange={(event) => setLetterType(event.target.value)}>
               <option value="">All letter types</option>
               <option value="INCOMING">Received</option>
-              <option value="OUTGOING">For Sending</option>
+              <option value="OUTGOING">Outgoing</option>
             </select>
           </label>
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">

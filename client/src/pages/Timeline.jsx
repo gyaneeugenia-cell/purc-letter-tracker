@@ -13,7 +13,7 @@ const incomingStages = [
 ];
 
 const outgoingStages = [
-  { status: 'READY_FOR_SIGNATURE', label: 'Letter for sending still at ES', tone: 'amber' },
+  { status: 'READY_FOR_SIGNATURE', label: 'Outgoing letter still at ES', tone: 'amber' },
   { status: 'DISPATCHED', label: 'Letter Sent', tone: 'emerald' }
 ];
 

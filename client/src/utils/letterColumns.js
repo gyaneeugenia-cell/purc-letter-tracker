@@ -20,7 +20,7 @@ function institutionOrRecipient(letter) {
 export const letterExportColumns = [
   { header: 'Date', accessor: fmtDate },
   { header: 'Reference No.', accessor: (l) => l.trackingNumber || '-' },
-  { header: 'Type', accessor: (l) => (l.type === 'INCOMING' ? 'Received' : 'For Sending') },
+  { header: 'Type', accessor: (l) => (l.type === 'INCOMING' ? 'Received' : 'Outgoing') },
   { header: 'Registry No.', accessor: (l) => l.registryNumber || '-' },
   { header: 'Institution / Recipient', accessor: institutionOrRecipient },
   { header: 'Subject', accessor: (l) => l.subject || '-' },
