@@ -151,7 +151,6 @@ export default function Dashboard() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
               <option value="subject">Subject A-Z</option>
-              <option value="followUp">Follow-up date first</option>
             </select>
           </label>
         </div>

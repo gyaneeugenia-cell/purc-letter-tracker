@@ -71,8 +71,8 @@ export function MetricCard({ icon: Icon, label, description, value, tone = 'blue
         )}
       </div>
 
-      {/* number pinned to the bottom so every card's number aligns */}
-      <p className={`relative mt-auto pt-3 ${compact ? 'text-3xl' : 'text-4xl'} font-semibold leading-none tracking-tight text-[#0b2348] dark:text-white`}>{value}</p>
+      {/* number pinned to the bottom, centred so every card's number aligns */}
+      <p className={`relative mt-auto pt-3 text-center ${compact ? 'text-[38px]' : 'text-[42px]'} font-semibold leading-none tracking-tight text-[#0b2348] dark:text-white`}>{value}</p>
       {!compact && description && <p className="relative mt-2 max-w-[15rem] text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300">{description}</p>}
     </motion.div>
   );
