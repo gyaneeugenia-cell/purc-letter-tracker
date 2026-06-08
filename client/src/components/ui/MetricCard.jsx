@@ -63,7 +63,7 @@ export function MetricCard({ icon: Icon, label, description, value, tone = 'blue
 
       {/* label row + icon */}
       <div className="relative flex items-start justify-between gap-3">
-        <p className={`min-w-0 ${compact ? 'text-base leading-[21px]' : 'text-lg leading-6'} font-normal tracking-tight text-slate-600 dark:text-slate-300`}>{label}</p>
+        <p className={`min-w-0 ${compact ? 'text-sm leading-5' : 'text-base leading-6'} font-normal tracking-tight text-slate-600 dark:text-slate-300`}>{label}</p>
         {Icon && (
           <div className={`grid ${compact ? 'h-11 w-11' : 'h-14 w-14'} shrink-0 place-items-center rounded-2xl ${style.iconBg} ${style.iconText}`}>
             <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={1.75} />
