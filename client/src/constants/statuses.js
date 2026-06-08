@@ -1,7 +1,7 @@
 export const statusLabels = {
   ES_RECEIVED: 'Received Letter at ES',
   DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Outgoing letter still at ES',
+  READY_FOR_SIGNATURE: 'Outgoing letter at ES',
   DISPATCHED: 'Letter Sent',
   ARCHIVED: 'Archived'
 };
@@ -12,7 +12,7 @@ export const incomingStatusOptions = [
 ];
 
 export const outgoingStatusOptions = [
-  { value: 'READY_FOR_SIGNATURE', label: 'Outgoing letter still at ES' },
+  { value: 'READY_FOR_SIGNATURE', label: 'Outgoing letter at ES' },
   { value: 'DISPATCHED', label: 'Letter Sent' }
 ];
 

@@ -312,10 +312,10 @@ dashboardRouter.get('/summary', (req, res) => {
   res.json({
     metrics: [
       { label: 'Total Letters Received', value: allIncoming.length, trend: '0%', tone: 'blue' },
-      { label: 'Received Letters at ES', value: allPendingInternal.length, trend: '0%', tone: 'amber' },
-      { label: 'Received Letters Dispatched', value: allDispatchedInternally.length, trend: '0%', tone: 'teal' },
-      { label: 'Outgoing letters still at ES', value: allPendingExternal.length, trend: '0%', tone: 'violet' },
-      { label: 'Letters Sent', value: allDispatchedExternally.length, trend: '0%', tone: 'red' }
+      { label: 'Total Received Letters at ES', value: allPendingInternal.length, trend: '0%', tone: 'amber' },
+      { label: 'Total Received Letters Dispatched', value: allDispatchedInternally.length, trend: '0%', tone: 'teal' },
+      { label: 'Total Outgoing Letters at ES', value: allPendingExternal.length, trend: '0%', tone: 'violet' },
+      { label: 'Total Letters Sent', value: allDispatchedExternally.length, trend: '0%', tone: 'red' }
     ],
     range: {
       from: range.from.toISOString(),

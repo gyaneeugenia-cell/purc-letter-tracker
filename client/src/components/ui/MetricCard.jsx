@@ -63,16 +63,16 @@ export function MetricCard({ icon: Icon, label, description, value, tone = 'blue
 
       {/* label row + icon */}
       <div className="relative flex items-start justify-between gap-3">
-        <p className={`min-w-0 ${compact ? 'text-[13px] leading-5' : 'text-[15px] leading-6'} font-semibold text-slate-500 dark:text-slate-300`}>{label}</p>
+        <p className={`min-w-0 ${compact ? 'text-xs leading-[15px]' : 'text-sm leading-5'} font-normal tracking-tight text-slate-500 dark:text-slate-300`}>{label}</p>
         {Icon && (
           <div className={`grid ${compact ? 'h-11 w-11' : 'h-14 w-14'} shrink-0 place-items-center rounded-2xl ${style.iconBg} ${style.iconText}`}>
-            <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={2} />
+            <Icon className={compact ? 'h-5 w-5' : 'h-6 w-6'} strokeWidth={1.75} />
           </div>
         )}
       </div>
 
       {/* number pinned to the bottom so every card's number aligns */}
-      <p className={`relative mt-auto pt-3 ${compact ? 'text-[34px]' : 'text-4xl'} font-black leading-none tracking-[-0.03em] text-[#0b2348] dark:text-white`}>{value}</p>
+      <p className={`relative mt-auto pt-3 ${compact ? 'text-3xl' : 'text-4xl'} font-semibold leading-none tracking-tight text-[#0b2348] dark:text-white`}>{value}</p>
       {!compact && description && <p className="relative mt-2 max-w-[15rem] text-xs font-semibold leading-5 text-slate-500 dark:text-slate-300">{description}</p>}
     </motion.div>
   );

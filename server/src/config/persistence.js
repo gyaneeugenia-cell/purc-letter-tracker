@@ -21,7 +21,7 @@ let enabled = false;
 const STATUS_LABELS = {
   ES_RECEIVED: 'Received Letter at ES',
   DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Outgoing letter still at ES',
+  READY_FOR_SIGNATURE: 'Outgoing letter at ES',
   DISPATCHED: 'Letter Sent',
   ARCHIVED: 'Archived'
 };

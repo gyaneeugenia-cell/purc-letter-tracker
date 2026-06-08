@@ -102,7 +102,7 @@ export default function Analytics() {
         <p className="font-semibold text-purcBlue dark:text-blue-300">Total Letters Received: {received}</p>
         <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Sent: {dispatched}</p>
         {awaiting > 0 && (
-          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Outgoing letters still at ES: {awaiting}</p>
+          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Outgoing letters at ES: {awaiting}</p>
         )}
       </div>
     );
@@ -140,14 +140,14 @@ export default function Analytics() {
                 Received Letters at ES: {d.incomingAtEs ?? 0}
               </span>
               <span className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white">
-                Outgoing letters still at ES: {d.outgoingAtEs ?? 0}
+                Outgoing letters at ES: {d.outgoingAtEs ?? 0}
               </span>
             </div>
             <p className="mt-3 text-xs font-medium text-slate-400">
               <span className="font-semibold text-slate-600 dark:text-slate-300">Received Letters at ES</span> = letters received by ES from external bodies not yet dispatched internally.
             </p>
             <p className="mt-1 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Outgoing letters still at ES</span> = outgoing letters still at ES not yet sent out.
+              <span className="font-semibold text-slate-600 dark:text-slate-300">Outgoing letters at ES</span> = outgoing letters at ES not yet sent out.
             </p>
           </>
         ) : (
@@ -200,7 +200,7 @@ export default function Analytics() {
     { header: 'Period', accessor: (b) => b.tooltipLabel || b.month },
     { header: 'Total Letters Received', accessor: (b) => b.incoming },
     { header: 'Letters Sent', accessor: (b) => b.dispatchedExternally },
-    { header: 'Outgoing letters still at ES', accessor: (b) => b.awaitingDispatch }
+    { header: 'Outgoing letters at ES', accessor: (b) => b.awaitingDispatch }
   ];
   const priorityExportColumns = [
     { header: 'Priority', accessor: (p) => p.name },
@@ -237,8 +237,8 @@ export default function Analytics() {
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: 'Total Letters Received', value: incomingTotal, tone: 'text-purcBlue dark:text-blue-200' },
-              { label: 'Letters Sent', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
-              { label: 'Outgoing letters still at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
+              { label: 'Total Letters Sent', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
+              { label: 'Total Outgoing Letters at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
               { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', tone: 'text-slate-700 dark:text-slate-100' }
             ].map((item) => (
               <div key={item.label} className="rounded-lg border border-slate-200/70 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
