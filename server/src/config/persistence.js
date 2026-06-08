@@ -19,13 +19,13 @@ let enabled = false;
 
 // Friendly labels so the database is readable in pgAdmin (alongside the codes).
 const STATUS_LABELS = {
-  ES_RECEIVED: 'Received Letters at ES',
-  DISPATCHED_TO_DEPARTMENT: 'Received Letters Dispatched',
-  READY_FOR_SIGNATURE: 'Letters for sending still at ES',
-  DISPATCHED: 'Letters Sent',
+  ES_RECEIVED: 'Received Letter at ES',
+  DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
+  READY_FOR_SIGNATURE: 'Letter for sending still at ES',
+  DISPATCHED: 'Letter Sent',
   ARCHIVED: 'Archived'
 };
-const TYPE_LABELS = { INCOMING: 'Received Letters', OUTGOING: 'Letters for sending' };
+const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'For Sending' };
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS departments (
@@ -165,6 +165,11 @@ export async function initPersistence() {
       enabled = true;
       console.log('[persistence] Database connected — saved data restored.');
     }
+
+    // Collapse any legacy priorities to the two supported values (URGENT/NORMAL).
+    letters.forEach((l) => {
+      l.priority = ['URGENT', 'HIGH'].includes(String(l.priority || '').toUpperCase()) ? 'URGENT' : 'NORMAL';
+    });
 
     // Auto-save every 15 seconds and on shutdown.
     setInterval(() => { persistAll(); }, 15000);

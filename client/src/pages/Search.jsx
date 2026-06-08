@@ -110,8 +110,8 @@ export default function Search() {
             Letter type
             <select className="input" value={type} onChange={(event) => changeType(event.target.value)}>
               <option value="">All letter types</option>
-              <option value="INCOMING">Received Letters</option>
-              <option value="OUTGOING">Letters for sending</option>
+              <option value="INCOMING">Received</option>
+              <option value="OUTGOING">For Sending</option>
             </select>
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">

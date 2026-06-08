@@ -17,9 +17,7 @@ const CHART = {
 
 const priorityColors = {
   Normal: CHART.blue,
-  High: CHART.amber,
-  Urgent: CHART.red,
-  Low: CHART.teal
+  Urgent: CHART.red
 };
 
 // Renders percentage labels inside each pie slice (works with fixed-pixel radii)
@@ -50,9 +48,7 @@ export default function Analytics() {
   const isDark = theme === 'dark';
   const priority = (data.priorityDistribution?.length ? data.priorityDistribution : [
     { name: 'Normal', value: 0, count: 0 },
-    { name: 'High', value: 0, count: 0 },
-    { name: 'Urgent', value: 0, count: 0 },
-    { name: 'Low', value: 0, count: 0 }
+    { name: 'Urgent', value: 0, count: 0 }
   ]).map((item) => ({ ...item, color: priorityColors[item.name] || CHART.blue }));
 
   const departmentColors = [CHART.blue, CHART.red, CHART.teal, CHART.amber, CHART.violet];
@@ -100,10 +96,10 @@ export default function Analytics() {
     return (
       <div className="min-w-[200px] rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
         <p className="mb-2 font-bold text-ink dark:text-white">{tooltipLabel}</p>
-        <p className="font-semibold text-purcBlue dark:text-blue-300">Letters Received: {received}</p>
-        <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Dispatched Externally: {dispatched}</p>
+        <p className="font-semibold text-purcBlue dark:text-blue-300">Total Letters Received: {received}</p>
+        <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Sent: {dispatched}</p>
         {awaiting > 0 && (
-          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Awaiting External Dispatch: {awaiting}</p>
+          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Letters for sending still at ES: {awaiting}</p>
         )}
       </div>
     );
@@ -119,9 +115,9 @@ export default function Analytics() {
       <div className="min-w-[230px] rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
         <p className="mb-2 font-bold text-ink dark:text-white">{bucket?.tooltipLabel || label}</p>
         <p className="font-semibold text-teal dark:text-teal-300">Total letters: {bucket?.total ?? 0}</p>
-        <p className="mt-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">{received} received record{received === 1 ? '' : 's'}</p>
-        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{dispatched} dispatched externally</p>
-        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{awaiting} awaiting external dispatch at ES</p>
+        <p className="mt-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">{received} received</p>
+        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{dispatched} sent</p>
+        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-300">{awaiting} for sending still at ES</p>
       </div>
     );
   }
@@ -155,17 +151,17 @@ export default function Analytics() {
                 Total at ES: {d.workload}
               </span>
               <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
-                Pending internal dispatch: {d.incomingAtEs ?? 0}
+                Received Letters at ES: {d.incomingAtEs ?? 0}
               </span>
               <span className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white">
-                Awaiting external dispatch: {d.outgoingAtEs ?? 0}
+                Letters for sending still at ES: {d.outgoingAtEs ?? 0}
               </span>
             </div>
             <p className="mt-3 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Pending internal dispatch</span> = letters received by ES from external bodies not yet dispatched internally.
+              <span className="font-semibold text-slate-600 dark:text-slate-300">Received Letters at ES</span> = letters received by ES from external bodies not yet dispatched internally.
             </p>
             <p className="mt-1 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Awaiting external dispatch</span> = outgoing letters still at ES pending external dispatch.
+              <span className="font-semibold text-slate-600 dark:text-slate-300">Letters for sending still at ES</span> = outgoing letters still at ES not yet sent out.
             </p>
           </>
         ) : (
@@ -235,10 +231,10 @@ export default function Analytics() {
             <div>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink dark:text-white">
                 <TrendingUp size={18} className="text-purcBlue dark:text-blue-300" />
-                Letters Received vs Letters Dispatched Externally
+                Total Letters Received vs Letters Sent
               </h2>
               <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                Compares letters received by the Commission against letters confirmed as dispatched externally by ES, grouped by the selected period.
+                Compares letters received by the Commission against letters confirmed as sent out by ES, grouped by the selected period.
               </p>
             </div>
             <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-purcBlue dark:bg-blue-900/50 dark:text-blue-100">Current operating view</span>
@@ -247,9 +243,9 @@ export default function Analytics() {
           {/* 4 summary stats */}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'Letters Received', value: incomingTotal, tone: 'text-purcBlue dark:text-blue-200' },
-              { label: 'Letters Dispatched Externally', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
-              { label: 'Awaiting External Dispatch at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
+              { label: 'Total Letters Received', value: incomingTotal, tone: 'text-purcBlue dark:text-blue-200' },
+              { label: 'Letters Sent', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
+              { label: 'Letters for sending still at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
               { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', tone: 'text-slate-700 dark:text-slate-100' }
             ].map((item) => (
               <div key={item.label} className="rounded-lg border border-slate-200/70 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
@@ -268,8 +264,8 @@ export default function Analytics() {
                 <YAxis allowDecimals={false} domain={[0, volumeUpper]} ticks={volumeTicks} width={38} tickLine={false} axisLine={false} tick={axisTick} />
                 <Tooltip content={<FlowTooltip />} />
                 <Legend content={<FlowLegend />} />
-                <Bar name="Letters Received" dataKey="incoming" fill={CHART.blue} radius={[8, 8, 0, 0]} maxBarSize={42} />
-                <Bar name="Letters Dispatched Externally" dataKey="dispatchedExternally" fill={CHART.red} radius={[8, 8, 0, 0]} maxBarSize={42} />
+                <Bar name="Total Letters Received" dataKey="incoming" fill={CHART.blue} radius={[8, 8, 0, 0]} maxBarSize={42} />
+                <Bar name="Letters Sent" dataKey="dispatchedExternally" fill={CHART.red} radius={[8, 8, 0, 0]} maxBarSize={42} />
               </BarChart>
             </ResponsiveContainer>
           </div>

@@ -253,16 +253,19 @@ function getVolumeBuckets(items, range) {
   return Array.from(buckets.values());
 }
 
+// Only two priorities are supported: Urgent and Normal.
+function normalizePriority(value) {
+  return ['URGENT', 'HIGH'].includes(String(value || '').toUpperCase()) ? 'URGENT' : 'NORMAL';
+}
+
 function priorityDistribution(items) {
   const priorities = [
     { key: 'NORMAL', name: 'Normal' },
-    { key: 'HIGH', name: 'High' },
-    { key: 'URGENT', name: 'Urgent' },
-    { key: 'LOW', name: 'Low' }
+    { key: 'URGENT', name: 'Urgent' }
   ];
   const total = items.length;
   return priorities.map((priority) => {
-    const count = items.filter((letter) => letter.priority === priority.key).length;
+    const count = items.filter((letter) => normalizePriority(letter.priority) === priority.key).length;
     return {
       name: priority.name,
       key: priority.key,

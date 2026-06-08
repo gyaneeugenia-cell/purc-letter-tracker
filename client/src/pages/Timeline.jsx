@@ -8,13 +8,13 @@ import { letterExportColumns } from '../utils/letterColumns.js';
 import { StatusChip } from '../components/ui/StatusChip.jsx';
 
 const incomingStages = [
-  { status: 'ES_RECEIVED', label: 'Received Letters at ES', tone: 'blue' },
-  { status: 'DISPATCHED_TO_DEPARTMENT', label: 'Received Letters Dispatched', tone: 'amber' }
+  { status: 'ES_RECEIVED', label: 'Received Letter at ES', tone: 'blue' },
+  { status: 'DISPATCHED_TO_DEPARTMENT', label: 'Received Letter Dispatched', tone: 'amber' }
 ];
 
 const outgoingStages = [
-  { status: 'READY_FOR_SIGNATURE', label: 'Letters for sending still at ES', tone: 'amber' },
-  { status: 'DISPATCHED', label: 'Letters Sent', tone: 'emerald' }
+  { status: 'READY_FOR_SIGNATURE', label: 'Letter for sending still at ES', tone: 'amber' },
+  { status: 'DISPATCHED', label: 'Letter Sent', tone: 'emerald' }
 ];
 
 const toneClasses = {
