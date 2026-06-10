@@ -236,14 +236,15 @@ export default function Analytics() {
           {/* 4 summary stats */}
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
-              { label: 'Total Letters Received', value: incomingTotal, tone: 'text-purcBlue dark:text-blue-200' },
-              { label: 'Total Letters Sent', value: dispatchedExternallyTotal, tone: 'text-purcRed dark:text-red-200' },
-              { label: 'Total Outgoing Letters at ES', value: awaitingDispatchTotal, tone: 'text-amber-600 dark:text-amber-300' },
-              { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', tone: 'text-slate-700 dark:text-slate-100' }
+              { label: 'Total Letters Received', value: incomingTotal, accent: CHART.blue, tone: 'text-purcBlue dark:text-blue-200', big: true },
+              { label: 'Total Letters Sent', value: dispatchedExternallyTotal, accent: CHART.red, tone: 'text-purcRed dark:text-red-200', big: true },
+              { label: 'Total Outgoing Letters at ES', value: awaitingDispatchTotal, accent: CHART.amber, tone: 'text-amber-600 dark:text-amber-300', big: true },
+              { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', accent: '#94A3B8', tone: 'text-slate-700 dark:text-slate-100', big: false }
             ].map((item) => (
-              <div key={item.label} className="rounded-lg border border-slate-200/70 bg-slate-50/70 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">{item.label}</p>
-                <p className={`mt-1 break-words text-xl font-bold leading-snug ${item.tone}`}>{item.value}</p>
+              <div key={item.label} className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-slate-900/60">
+                <span className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: item.accent }} aria-hidden="true" />
+                <p className="pl-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">{item.label}</p>
+                <p className={`mt-1.5 break-words pl-1.5 font-bold leading-snug ${item.big ? 'text-2xl' : 'text-base'} ${item.tone}`}>{item.value}</p>
               </div>
             ))}
           </div>

@@ -297,7 +297,7 @@ export default function Letters({ type }) {
           </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Registry number
-            <input className="input" inputMode="numeric" pattern="[0-9]*" placeholder="Type registry number" value={form.registryNumber} onChange={(e) => setForm({ ...form, registryNumber: numericOnly(e.target.value) })} />
+            <input className="input cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-white/5" value="Auto-generated on save" readOnly />
           </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             No. of letter

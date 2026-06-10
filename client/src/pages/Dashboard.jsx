@@ -8,7 +8,7 @@ import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
 import { MetricCard } from '../components/ui/MetricCard.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
-import { allStatusOptions } from '../constants/statuses.js';
+import { allStatusOptions, incomingStatusOptions, outgoingStatusOptions } from '../constants/statuses.js';
 import { institutionSearchTerms } from '../constants/institutions.js';
 
 function letterTimestamp(letter) {
@@ -75,6 +75,12 @@ export default function Dashboard() {
 
   const icons = [Inbox, TimerReset, Building2, Clock, Send];
   const rangeLabel = formatRangeLabel(timeRange);
+  // Status options follow the chosen letter type (like the Search page).
+  const statusOptionsForType = letterType === 'INCOMING'
+    ? incomingStatusOptions
+    : letterType === 'OUTGOING'
+      ? outgoingStatusOptions
+      : allStatusOptions;
 
   return (
     <div className="space-y-6">
@@ -132,7 +138,7 @@ export default function Dashboard() {
           </label>
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Letter type
-            <select className="input" value={letterType} onChange={(event) => setLetterType(event.target.value)}>
+            <select className="input" value={letterType} onChange={(event) => { setLetterType(event.target.value); setStatus(''); }}>
               <option value="">All letter types</option>
               <option value="INCOMING">Received</option>
               <option value="OUTGOING">Outgoing</option>
@@ -142,7 +148,7 @@ export default function Dashboard() {
             Status
             <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">All statuses</option>
-              {allStatusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              {statusOptionsForType.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
