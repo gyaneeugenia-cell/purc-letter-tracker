@@ -24,9 +24,11 @@ function findLetter(id) {
   return letters.find((item) => item.id === id || item.trackingNumber === id);
 }
 
-// Auto-generate the next sequential registry number (highest existing + 1).
-function nextRegistryNumber() {
+// Auto-generate the next sequential registry number. Received and outgoing
+// letters keep separate registers, each counting up in order (1, 2, 3, …).
+function nextRegistryNumber(type) {
   const max = letters.reduce((highest, item) => {
+    if (item.type !== type) return highest;
     const n = parseInt(item.registryNumber, 10);
     return Number.isFinite(n) && n > highest ? n : highest;
   }, 0);
@@ -222,7 +224,7 @@ lettersRouter.post('/', (req, res) => {
     createdAt: new Date().toISOString(),
     ...req.body,
     attachments,
-    registryNumber: registryNumber.value || nextRegistryNumber(),
+    registryNumber: registryNumber.value || nextRegistryNumber(type),
     letterNumber: letterNumber.value,
     letterDate: letterDate.value,
     dueAt: dueAt.value,

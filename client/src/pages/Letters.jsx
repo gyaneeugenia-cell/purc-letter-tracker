@@ -175,8 +175,8 @@ export default function Letters({ type }) {
       setPendingDispatchLetter(null);
       setStatusMessage(
         data.data.type === 'INCOMING'
-          ? `${data.data.trackingNumber} marked as dispatched internally.`
-          : `${data.data.trackingNumber} marked as dispatched externally.`
+          ? `${data.data.trackingNumber} marked as dispatched internally to ${destination}.`
+          : `${data.data.trackingNumber} marked as dispatched externally to ${destination}.`
       );
       notifyLettersChanged();
     } finally {
