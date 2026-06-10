@@ -838,3 +838,9 @@ export const auditLogs = letters
     ip: '127.0.0.1'
   }))
   .sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+// Two statuses only: every received (incoming) letter is RECEIVED, every
+// outgoing letter is DISPATCHED. Normalise the sample records on load.
+letters.forEach((letter) => {
+  letter.status = letter.type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED';
+});

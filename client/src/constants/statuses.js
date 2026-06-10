@@ -1,22 +1,20 @@
+// Two statuses only:
+//  RECEIVED  = received by the commission (every incoming letter)
+//  DISPATCHED = sent from the commission (every outgoing letter)
 export const statusLabels = {
-  ES_RECEIVED: 'Received Letter at ES',
-  DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Outgoing letter at ES',
-  DISPATCHED: 'Letter Sent',
-  ARCHIVED: 'Archived'
+  RECEIVED: 'Received',
+  DISPATCHED: 'Dispatched'
 };
 
 export const incomingStatusOptions = [
-  { value: 'ES_RECEIVED', label: 'Received Letter at ES' },
-  { value: 'DISPATCHED_TO_DEPARTMENT', label: 'Received Letter Dispatched' }
+  { value: 'RECEIVED', label: 'Received' }
 ];
 
 export const outgoingStatusOptions = [
-  { value: 'READY_FOR_SIGNATURE', label: 'Outgoing letter at ES' },
-  { value: 'DISPATCHED', label: 'Letter Sent' }
+  { value: 'DISPATCHED', label: 'Dispatched' }
 ];
 
 export const allStatusOptions = [
-  ...incomingStatusOptions,
-  ...outgoingStatusOptions.filter((status) => !incomingStatusOptions.some((item) => item.value === status.value))
+  { value: 'RECEIVED', label: 'Received' },
+  { value: 'DISPATCHED', label: 'Dispatched' }
 ];

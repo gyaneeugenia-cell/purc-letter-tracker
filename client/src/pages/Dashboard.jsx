@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Building2, Clock, Inbox, Plus, Search, Send, TimerReset } from 'lucide-react';
+import { Inbox, Plus, Search, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http.js';
 import { PeriodControls, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
@@ -73,7 +73,7 @@ export default function Dashboard() {
     return <div className="grid gap-4 md:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
   }
 
-  const icons = [Inbox, TimerReset, Building2, Clock, Send];
+  const icons = [Inbox, Send];
   const rangeLabel = formatRangeLabel(timeRange);
   // Status options follow the chosen letter type (like the Search page).
   const statusOptionsForType = letterType === 'INCOMING'
@@ -92,7 +92,7 @@ export default function Dashboard() {
           setGroupBy={setGroupBy}
         />
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2">
         {data.metrics.map((metric, index) => (
           <MetricCard key={metric.label} label={metric.label} value={metric.value} trend={metric.trend} tone={metric.tone} icon={icons[index]} compact />
         ))}

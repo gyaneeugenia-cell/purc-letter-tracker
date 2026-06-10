@@ -19,11 +19,8 @@ let enabled = false;
 
 // Friendly labels so the database is readable in pgAdmin (alongside the codes).
 const STATUS_LABELS = {
-  ES_RECEIVED: 'Received Letter at ES',
-  DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Outgoing letter at ES',
-  DISPATCHED: 'Letter Sent',
-  ARCHIVED: 'Archived'
+  RECEIVED: 'Received',
+  DISPATCHED: 'Dispatched'
 };
 const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Outgoing' };
 
@@ -169,6 +166,11 @@ export async function initPersistence() {
     // Collapse any legacy priorities to the two supported values (URGENT/NORMAL).
     letters.forEach((l) => {
       l.priority = ['URGENT', 'HIGH'].includes(String(l.priority || '').toUpperCase()) ? 'URGENT' : 'NORMAL';
+    });
+    // Collapse any legacy statuses to the two supported values:
+    // RECEIVED (received by the commission) and DISPATCHED (sent from the commission).
+    letters.forEach((l) => {
+      l.status = l.type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED';
     });
 
     // Auto-save every 15 seconds and on shutdown.

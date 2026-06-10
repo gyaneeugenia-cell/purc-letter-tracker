@@ -7,16 +7,15 @@ import { inferLetterMovement, applyRemarkIntelligence, enrichLetterWithRemarkInt
 export const lettersRouter = Router();
 
 const workflowLabels = {
-  ES_RECEIVED: 'Received Letter at ES',
-  DISPATCHED_TO_DEPARTMENT: 'Received Letter Dispatched',
-  READY_FOR_SIGNATURE: 'Outgoing letter at ES',
-  DISPATCHED: 'Letter Sent',
-  ARCHIVED: 'Archived'
+  RECEIVED: 'Received',
+  DISPATCHED: 'Dispatched'
 };
 
 const esOfficeDestination = 'ES office';
-const allowedIncomingStatuses = ['ES_RECEIVED', 'DISPATCHED_TO_DEPARTMENT', 'ARCHIVED'];
-const allowedOutgoingStatuses = ['READY_FOR_SIGNATURE', 'DISPATCHED', 'ARCHIVED'];
+// Simplified workflow: an incoming letter is "RECEIVED" by the commission,
+// an outgoing letter is "DISPATCHED" from the commission. No intermediate states.
+const allowedIncomingStatuses = ['RECEIVED'];
+const allowedOutgoingStatuses = ['DISPATCHED'];
 const allowedLetterTypes = ['INCOMING', 'OUTGOING'];
 const allowedPriorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
@@ -175,7 +174,9 @@ function applyFilters(items, query) {
 }
 
 lettersRouter.get('/', (req, res) => {
-  const filtered = applyFilters(enrichLettersWithRemarkIntelligence(letters), req.query);
+  // Use the stored letters directly — status is fixed (RECEIVED / DISPATCHED),
+  // so no inference is applied that could override it.
+  const filtered = applyFilters(letters, req.query);
   res.json({ data: filtered, total: filtered.length });
 });
 
@@ -215,7 +216,7 @@ lettersRouter.post('/', (req, res) => {
   const letter = {
     id: uuid(),
     trackingNumber,
-    status: type === 'OUTGOING' ? 'READY_FOR_SIGNATURE' : 'ES_RECEIVED',
+    status: type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED',
     priority: 'NORMAL',
     confidentiality: 'INTERNAL',
     attachments,
@@ -240,7 +241,7 @@ lettersRouter.post('/', (req, res) => {
     createdBy: actorName(req),
     createdByDepartment: actorDepartment(req)
   };
-  applyRemarkIntelligence(letter);
+  // Status is fixed by type (RECEIVED / DISPATCHED) — no inference override.
   letters.unshift(letter);
   recordMovement(letter, req, 'Letter registered', 'Record created', actorDepartment(req));
   recordAudit(req, 'LETTER_CREATED', letter);
@@ -315,7 +316,8 @@ lettersRouter.patch('/:id', (req, res) => {
   }
   letter.trackingNumber = nextReference;
   letter.updatedAt = new Date().toISOString();
-  applyRemarkIntelligence(letter);
+  // Keep the status fixed by type — editing fields must not change it.
+  letter.status = letter.type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED';
 
   recordMovement(letter, req, 'Letter record edited', 'Record corrected after review.', actorDepartment(req));
   recordAudit(req, 'LETTER_UPDATED', letter);
@@ -330,7 +332,7 @@ lettersRouter.post('/:id/route', (req, res) => {
   if (letter.type === 'INCOMING') letter.routeDepartment = targetDepartment;
   letter.assignedTo = req.body.assignedTo || letter.assignedTo;
   letter.dispatchedAt = new Date().toISOString();
-  letter.status = letter.type === 'INCOMING' ? 'DISPATCHED_TO_DEPARTMENT' : 'DISPATCHED';
+  letter.status = letter.type === 'INCOMING' ? 'RECEIVED' : 'DISPATCHED';
   letter.updatedAt = new Date().toISOString();
   // Do NOT call applyRemarkIntelligence — dispatch status was explicitly set above.
   if (!hasDispatchMovement(letter, targetDepartment)) {
@@ -350,52 +352,19 @@ lettersRouter.post('/:id/workflow', (req, res) => {
   const letter = findLetter(req.params.id);
   if (!letter) return res.status(404).json({ message: 'Letter not found' });
 
-  const allowed = letter.type === 'INCOMING' ? allowedIncomingStatuses : allowedOutgoingStatuses;
-  const nextStatus = req.body.status;
-  if (!allowed.includes(nextStatus)) {
-    return res.status(400).json({ message: 'Invalid workflow status for this letter type' });
-  }
-
-  const dispatchStatuses = ['DISPATCHED', 'DISPATCHED_TO_DEPARTMENT'];
-  const esStatuses = ['ES_RECEIVED', 'READY_FOR_SIGNATURE'];
-  if (esStatuses.includes(nextStatus)) {
-    letter.currentDepartment = esOfficeDestination;
-    letter.dispatchedAt = null;
-  } else if (dispatchStatuses.includes(nextStatus)) {
-    const targetDepartment = req.body.currentDepartment || (letter.type === 'OUTGOING' ? letter.recipient : letter.routeDepartment || letter.currentDepartment);
-    letter.currentDepartment = targetDepartment;
-    if (letter.type === 'INCOMING') letter.routeDepartment = targetDepartment;
-  } else if (req.body.currentDepartment) {
-    letter.currentDepartment = req.body.currentDepartment;
-  }
+  // The status is fixed by type, so the only valid value is the type's own status.
+  const fixedStatus = letter.type === 'INCOMING' ? 'RECEIVED' : 'DISPATCHED';
+  if (req.body.currentDepartment) letter.currentDepartment = req.body.currentDepartment;
   if (req.body.assignedTo) letter.assignedTo = req.body.assignedTo;
-  letter.status = nextStatus;
-  if (dispatchStatuses.includes(nextStatus)) letter.dispatchedAt = new Date().toISOString();
-  if (nextStatus === 'ARCHIVED') letter.completedAt = new Date().toISOString();
+  letter.status = fixedStatus;
   letter.updatedAt = new Date().toISOString();
-  // Do NOT call applyRemarkIntelligence here — the user explicitly set this status
-  // and intelligence must not silently override it.
-
-  if (dispatchStatuses.includes(nextStatus)) {
-    const targetDepartment = letter.currentDepartment || letter.routeDepartment || actorDepartment(req);
-    if (!hasDispatchMovement(letter, targetDepartment)) {
-      recordMovement(
-        letter,
-        req,
-        letter.type === 'INCOMING' ? `Dispatched to ${targetDepartment}` : 'Outgoing letter dispatched',
-        req.body.note || (letter.type === 'INCOMING' ? 'Dispatched from ES office for department action.' : 'Outgoing letter dispatched from ES office.'),
-        targetDepartment
-      );
-    }
-  } else {
-    recordMovement(
-      letter,
-      req,
-      `Workflow set to ${workflowLabels[nextStatus] || nextStatus}`,
-      req.body.note || 'Workflow status updated.',
-      letter.currentDepartment
-    );
-  }
+  recordMovement(
+    letter,
+    req,
+    `Status confirmed as ${workflowLabels[fixedStatus] || fixedStatus}`,
+    req.body.note || 'Status confirmed.',
+    letter.currentDepartment
+  );
   recordAudit(req, 'WORKFLOW_UPDATED', letter);
   res.json({ data: publicLetter(letter) });
 });

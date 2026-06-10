@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Filter, Inbox, Loader2, Plus, Search, Send, XCircle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { CheckCircle2, Filter, Inbox, Plus, Search, Send } from 'lucide-react';
 import { http } from '../api/http.js';
 import { notifyLettersChanged } from '../api/letterEvents.js';
 import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
@@ -9,10 +9,9 @@ import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
-import { StatusChip } from '../components/ui/StatusChip.jsx';
 import { purcDepartments } from '../constants/departments.js';
 import { institutionOptions, institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
-import { incomingStatusOptions, outgoingStatusOptions, statusLabels } from '../constants/statuses.js';
+import { incomingStatusOptions, outgoingStatusOptions } from '../constants/statuses.js';
 
 function emptyForm(type) {
   return {
@@ -41,13 +40,7 @@ function numericOnly(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
-function dispatchDestinationForLetter(letter) {
-  if (letter?.type === 'OUTGOING') return letter.recipient || 'Recipient';
-  return letter?.routeDepartment || letter?.currentDepartment || 'Executive Secretary';
-}
-
 export default function Letters({ type }) {
-  const navigate = useNavigate();
   const { timeRange } = usePersistentPeriod();
   const [searchParams, setSearchParams] = useSearchParams();
   const [letters, setLetters] = useState([]);
@@ -57,12 +50,8 @@ export default function Letters({ type }) {
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
   const [form, setForm] = useState(() => emptyForm(type));
-  const [pendingDispatchLetter, setPendingDispatchLetter] = useState(null);
-  const [redirectingLetter, setRedirectingLetter] = useState(null);
-  const [dispatching, setDispatching] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [formError, setFormError] = useState('');
-  const redirectTimerRef = useRef(null);
 
   async function loadLetters() {
     setLoading(true);
@@ -87,10 +76,6 @@ export default function Letters({ type }) {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
-
-  useEffect(() => () => {
-    if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
-  }, []);
 
   async function submit(event) {
     event.preventDefault();
@@ -120,67 +105,14 @@ export default function Letters({ type }) {
       setLetters((items) => [createdLetter, ...items]);
       setForm(emptyForm(type));
       setOpen(false);
-      setPendingDispatchLetter(createdLetter);
+      setStatusMessage(
+        type === 'INCOMING'
+          ? `${createdLetter.trackingNumber} registered as Received (registry no. ${createdLetter.registryNumber}).`
+          : `${createdLetter.trackingNumber} registered as Dispatched to ${createdLetter.recipient} (registry no. ${createdLetter.registryNumber}).`
+      );
       notifyLettersChanged();
     } catch (error) {
       setFormError(error?.response?.data?.message || error.message || 'Unable to create this letter record.');
-    }
-  }
-
-  function redirectCreatedLetterToDispatch() {
-    if (!pendingDispatchLetter) return;
-    const letter = pendingDispatchLetter;
-    setPendingDispatchLetter(null);
-    directToLetterDetails(letter);
-  }
-
-  function directToLetterDetails(letter) {
-    setRedirectingLetter(letter);
-    if (redirectTimerRef.current) window.clearTimeout(redirectTimerRef.current);
-    redirectTimerRef.current = window.setTimeout(() => {
-      navigate(`/letters/${letter.id}`, { state: { allowDispatch: true } });
-      setRedirectingLetter(null);
-      redirectTimerRef.current = null;
-    }, 1400);
-  }
-
-  async function changeLetterStatus(letter, nextStatus) {
-    const returnToEs = ['ES_RECEIVED', 'READY_FOR_SIGNATURE'].includes(nextStatus);
-    const destination = returnToEs
-      ? 'ES office'
-      : dispatchDestinationForLetter(letter);
-    const { data } = await http.post(`/letters/${letter.id}/workflow`, {
-      status: nextStatus,
-      currentDepartment: destination,
-      note: `Status changed to ${statusLabels[nextStatus] || nextStatus} from the ${type === 'INCOMING' ? 'letters received' : 'letters sent'} page.`
-    });
-    const updated = data?.data;
-    if (updated) {
-      setLetters((items) => items.map((item) => (item.id === updated.id ? updated : item)));
-      setStatusMessage(`${updated.trackingNumber} is now ${statusLabels[updated.status] || updated.status}.`);
-      notifyLettersChanged();
-    }
-  }
-
-  async function markCreatedLetterDispatched() {
-    if (!pendingDispatchLetter) return;
-    const destination = dispatchDestinationForLetter(pendingDispatchLetter);
-    setDispatching(true);
-    try {
-      const { data } = await http.post(`/letters/${pendingDispatchLetter.id}/route`, {
-        department: destination,
-        note: pendingDispatchLetter.type === 'OUTGOING' ? `Dispatched from PURC to ${destination}` : `Dispatched from ES to ${destination}`
-      });
-      setLetters((items) => items.map((item) => (item.id === data.data.id ? data.data : item)));
-      setPendingDispatchLetter(null);
-      setStatusMessage(
-        data.data.type === 'INCOMING'
-          ? `${data.data.trackingNumber} marked as dispatched internally to ${destination}.`
-          : `${data.data.trackingNumber} marked as dispatched externally to ${destination}.`
-      );
-      notifyLettersChanged();
-    } finally {
-      setDispatching(false);
     }
   }
 
@@ -271,12 +203,7 @@ export default function Letters({ type }) {
         </div>
         <div className="p-2">
           {loading ? <Skeleton className="h-96" /> : (
-            <DataTable
-              rows={filteredLetters}
-              letterType={type}
-              statusOptions={statusOptions}
-              onStatusChange={changeLetterStatus}
-            />
+            <DataTable rows={filteredLetters} letterType={type} />
           )}
         </div>
       </section>
@@ -351,50 +278,6 @@ export default function Letters({ type }) {
           <button className="primary-button md:col-span-2">Create record</button>
         </form>
       </Modal>
-      <Modal open={Boolean(pendingDispatchLetter)} title="Has this letter been dispatched?" onClose={redirectCreatedLetterToDispatch}>
-        {pendingDispatchLetter && (
-          <div className="space-y-5">
-            <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 dark:border-blue-900/60 dark:bg-blue-950/40">
-              <p className="text-xs font-bold uppercase text-slate-500 dark:text-slate-300">Current status</p>
-              <div className="mt-2">
-                <StatusChip status={pendingDispatchLetter.status} />
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <button type="button" className="secondary-button" onClick={redirectCreatedLetterToDispatch}>
-                <XCircle size={16} /> No
-              </button>
-              <button type="button" className="primary-button" onClick={markCreatedLetterDispatched} disabled={dispatching}>
-                <CheckCircle2 size={16} /> Yes
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
-      {redirectingLetter && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/90 bg-white shadow-[0_24px_90px_rgba(6,29,58,0.28)] dark:border-white/10 dark:bg-slate-900">
-            <div className="relative p-6">
-              <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(70,91,168,0.10),rgba(14,143,143,0.08),rgba(246,212,75,0.12))]" />
-              <div className="relative flex items-start gap-4">
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-purcBlue text-white shadow-lg shadow-blue-900/20">
-                  <Loader2 className="animate-spin" size={26} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Record saved</p>
-                  <h2 className="mt-2 text-2xl font-black text-ink dark:text-white">Directing you to letter details page</h2>
-                  <p className="mt-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                    Preparing {redirectingLetter.trackingNumber} so you can confirm dispatch.
-                  </p>
-                </div>
-              </div>
-              <div className="relative mt-6 h-3 overflow-hidden rounded-full bg-blue-100 dark:bg-slate-700">
-                <div className="h-full w-2/3 animate-pulse rounded-full bg-[linear-gradient(90deg,#465BA8,#0E8F8F,#F6D44B)]" />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -122,35 +122,24 @@ function isEsOffice(value) {
   return ['es office', 'executive secretary', 'executive secretary office'].includes(normalizeDepartment(value));
 }
 
-function isStillAtEs(letter) {
-  return ['ES_RECEIVED', 'READY_FOR_SIGNATURE'].includes(letter.status) || isEsOffice(letter.currentDepartment);
+function isReceived(letter) {
+  return letter.status === 'RECEIVED' || letter.type === 'INCOMING';
 }
 
 function isDispatched(letter) {
-  return ['DISPATCHED_TO_DEPARTMENT', 'DISPATCHED'].includes(letter.status);
+  return letter.status === 'DISPATCHED' || letter.type === 'OUTGOING';
 }
 
 function outgoingFromDepartment(letter, department) {
   if (letter.type !== 'OUTGOING') return false;
-  if (isStillAtEs(letter)) return isExecutiveSecretary(department);
   return matchesDepartment(letter.routeDepartment, department)
-    || matchesDepartment(letter.sender, department)
-    || matchesDepartment(letter.inferredDepartment, department)
-    || matchesDepartment(letter.inferredDepartmentCode, department);
+    || matchesDepartment(letter.sender, department);
 }
 
 function incomingDispatchedToDepartment(letter, department) {
   if (letter.type !== 'INCOMING') return false;
-  if (isStillAtEs(letter)) return false;
-  if (letter.status !== 'DISPATCHED_TO_DEPARTMENT') return false;
   return matchesDepartment(letter.routeDepartment, department)
-    || matchesDepartment(letter.currentDepartment, department)
-    || matchesDepartment(letter.inferredDepartment, department)
-    || matchesDepartment(letter.inferredDepartmentCode, department);
-}
-
-function incomingAtExecutiveSecretary(letter, department) {
-  return letter.type === 'INCOMING' && isExecutiveSecretary(department) && isStillAtEs(letter);
+    || matchesDepartment(letter.currentDepartment, department);
 }
 
 function uniqueLetters(items) {
@@ -245,8 +234,7 @@ function getVolumeBuckets(items, range) {
     if (letter.type === 'INCOMING') bucket.incoming += 1;
     if (letter.type === 'OUTGOING') {
       bucket.outgoing += 1;
-      if (letter.status === 'DISPATCHED') bucket.dispatchedExternally += 1;
-      if (letter.status === 'READY_FOR_SIGNATURE') bucket.awaitingDispatch += 1;
+      bucket.dispatchedExternally += 1; // every outgoing letter is dispatched
     }
   });
 
@@ -295,12 +283,10 @@ dashboardRouter.get('/summary', (req, res) => {
   const outgoing = periodLetters.filter((letter) => letter.type === 'OUTGOING');
   const previousIncoming = previousLetters.filter((letter) => letter.type === 'INCOMING');
 
-  // Metric CARDS always use ALL-TIME actual statuses so they match the Letters pages
-  const allIncoming = letters.filter((l) => l.type === 'INCOMING');
-  const allPendingInternal = letters.filter((l) => l.status === 'ES_RECEIVED');
-  const allDispatchedInternally = letters.filter((l) => l.status === 'DISPATCHED_TO_DEPARTMENT');
-  const allPendingExternal = letters.filter((l) => l.status === 'READY_FOR_SIGNATURE');
-  const allDispatchedExternally = letters.filter((l) => l.status === 'DISPATCHED');
+  // Metric CARDS use ALL-TIME counts. Two statuses only: every incoming letter
+  // is RECEIVED, every outgoing letter is DISPATCHED — so counting by type is exact.
+  const allReceived = letters.filter((l) => l.type === 'INCOMING');
+  const allDispatched = letters.filter((l) => l.type === 'OUTGOING');
 
   const registerLetters = [...periodLetters]
     .sort((a, b) => getLetterDate(b).getTime() - getLetterDate(a).getTime());
@@ -311,11 +297,8 @@ dashboardRouter.get('/summary', (req, res) => {
 
   res.json({
     metrics: [
-      { label: 'Total Letters Received', value: allIncoming.length, trend: '0%', tone: 'blue' },
-      { label: 'Total Received Letters at ES', value: allPendingInternal.length, trend: '0%', tone: 'amber' },
-      { label: 'Total Received Letters Dispatched', value: allDispatchedInternally.length, trend: '0%', tone: 'teal' },
-      { label: 'Total Outgoing Letters at ES', value: allPendingExternal.length, trend: '0%', tone: 'violet' },
-      { label: 'Total Letters Sent', value: allDispatchedExternally.length, trend: '0%', tone: 'red' }
+      { label: 'Total Letters Received', value: allReceived.length, trend: '0%', tone: 'blue' },
+      { label: 'Total Letters Dispatched', value: allDispatched.length, trend: '0%', tone: 'red' }
     ],
     range: {
       from: range.from.toISOString(),
@@ -327,26 +310,13 @@ dashboardRouter.get('/summary', (req, res) => {
     attachmentInsights: attachmentInsights(periodLetters),
     remarkInsights: remarkInsights(enrichedPeriod),
     departments: departments.map((department) => {
-      const sentLetters = periodLetters.filter((letter) => outgoingFromDepartment(letter, department) && letter.status === 'DISPATCHED');
-      const atEsLetters = isExecutiveSecretary(department)
-        ? periodLetters.filter((letter) => isStillAtEs(letter))
-        : [];
+      const sentLetters = periodLetters.filter((letter) => outgoingFromDepartment(letter, department));
       const receivedLetters = periodLetters.filter((letter) => incomingDispatchedToDepartment(letter, department));
-      const dedicatedLetters = uniqueLetters([...atEsLetters, ...sentLetters, ...receivedLetters]);
-      // ES-specific breakdown
-      const incomingAtEs = isExecutiveSecretary(department)
-        ? periodLetters.filter((l) => l.type === 'INCOMING' && l.status === 'ES_RECEIVED').length
-        : null;
-      const outgoingAtEs = isExecutiveSecretary(department)
-        ? periodLetters.filter((l) => l.type === 'OUTGOING' && l.status === 'READY_FOR_SIGNATURE').length
-        : null;
+      const dedicatedLetters = uniqueLetters([...sentLetters, ...receivedLetters]);
       return {
         code: department.code,
         name: department.name,
         workload: dedicatedLetters.length,
-        atEs: atEsLetters.length,
-        incomingAtEs,
-        outgoingAtEs,
         sent: sentLetters.length,
         dispatched: sentLetters.length,
         received: receivedLetters.length,

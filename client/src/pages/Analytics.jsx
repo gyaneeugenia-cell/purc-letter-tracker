@@ -79,7 +79,7 @@ export default function Analytics() {
   }));
   const incomingTotal = flowData.reduce((sum, b) => sum + b.incoming, 0);
   const dispatchedExternallyTotal = flowData.reduce((sum, b) => sum + (b.dispatchedExternally ?? 0), 0);
-  const awaitingDispatchTotal = data.metrics[3]?.value ?? 0; // current READY_FOR_SIGNATURE state
+  const combinedTotal = incomingTotal + dispatchedExternallyTotal;
   const busiestFlowBucket = [...flowData].sort((a, b) => (b.incoming + b.dispatchedExternally) - (a.incoming + a.dispatchedExternally))[0];
 
   const maxVolume = Math.max(0, ...flowData.map((b) => Math.max(b.incoming, b.dispatchedExternally)));
@@ -125,52 +125,27 @@ export default function Analytics() {
     if (!active || !payload?.length) return null;
     const d = payload[0].payload;
     const color = departmentColors[data.departments.indexOf(d) % departmentColors.length];
-    const isES = d.code === 'ES';
     return (
-      <div className="min-w-[270px] rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
+      <div className="min-w-[260px] rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
         <p className="mb-0.5 text-xs font-bold uppercase tracking-wider" style={{ color }}>{d.code}</p>
         <p className="mb-3 text-base font-bold leading-tight text-ink dark:text-white">{d.name}</p>
-        {isES ? (
-          <>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-lg px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: color }}>
-                Total at ES: {d.workload}
-              </span>
-              <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
-                Received Letters at ES: {d.incomingAtEs ?? 0}
-              </span>
-              <span className="rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-white">
-                Outgoing letters at ES: {d.outgoingAtEs ?? 0}
-              </span>
-            </div>
-            <p className="mt-3 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Received Letters at ES</span> = letters received by ES from external bodies not yet dispatched internally.
-            </p>
-            <p className="mt-1 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Outgoing letters at ES</span> = outgoing letters at ES not yet sent out.
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-wrap gap-2">
-              <span className="rounded-lg px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: color }}>
-                Total: {d.workload}
-              </span>
-              <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
-                Received: {d.received}
-              </span>
-              <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-                Sent: {d.sent}
-              </span>
-            </div>
-            <p className="mt-3 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Received</span> = letters internally dispatched to {d.code} by ES.
-            </p>
-            <p className="mt-1 text-xs font-medium text-slate-400">
-              <span className="font-semibold text-slate-600 dark:text-slate-300">Sent</span> = letters {d.code} submitted to ES that ES has dispatched externally.
-            </p>
-          </>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-lg px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: color }}>
+            Total: {d.workload}
+          </span>
+          <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
+            Received: {d.received}
+          </span>
+          <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
+            Dispatched: {d.sent}
+          </span>
+        </div>
+        <p className="mt-3 text-xs font-medium text-slate-400">
+          <span className="font-semibold text-slate-600 dark:text-slate-300">Received</span> = letters received by the Commission routed to {d.code}.
+        </p>
+        <p className="mt-1 text-xs font-medium text-slate-400">
+          <span className="font-semibold text-slate-600 dark:text-slate-300">Dispatched</span> = letters dispatched from {d.code} by the Commission.
+        </p>
       </div>
     );
   }
@@ -199,8 +174,7 @@ export default function Analytics() {
   const flowExportColumns = [
     { header: 'Period', accessor: (b) => b.tooltipLabel || b.month },
     { header: 'Total Letters Received', accessor: (b) => b.incoming },
-    { header: 'Letters Sent', accessor: (b) => b.dispatchedExternally },
-    { header: 'Outgoing letters at ES', accessor: (b) => b.awaitingDispatch }
+    { header: 'Letters Sent', accessor: (b) => b.dispatchedExternally }
   ];
   const priorityExportColumns = [
     { header: 'Priority', accessor: (p) => p.name },
@@ -238,7 +212,7 @@ export default function Analytics() {
             {[
               { label: 'Total Letters Received', value: incomingTotal, accent: CHART.blue, tone: 'text-purcBlue dark:text-blue-200', big: true },
               { label: 'Total Letters Sent', value: dispatchedExternallyTotal, accent: CHART.red, tone: 'text-purcRed dark:text-red-200', big: true },
-              { label: 'Total Outgoing Letters at ES', value: awaitingDispatchTotal, accent: CHART.amber, tone: 'text-amber-600 dark:text-amber-300', big: true },
+              { label: 'Total Letters', value: combinedTotal, accent: CHART.teal, tone: 'text-teal dark:text-teal-300', big: true },
               { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', accent: '#94A3B8', tone: 'text-slate-700 dark:text-slate-100', big: false }
             ].map((item) => (
               <div key={item.label} className="relative overflow-hidden rounded-xl border border-slate-200/80 bg-white px-4 py-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] dark:border-white/10 dark:bg-slate-900/60">
