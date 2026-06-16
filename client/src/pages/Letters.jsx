@@ -11,7 +11,6 @@ import { Modal } from '../components/ui/Modal.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
 import { purcDepartments } from '../constants/departments.js';
 import { institutionOptions, institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
-import { incomingStatusOptions, outgoingStatusOptions } from '../constants/statuses.js';
 
 function emptyForm(type) {
   return {
@@ -136,7 +135,6 @@ export default function Letters({ type }) {
     loadLetters();
   }
 
-  const statusOptions = type === 'INCOMING' ? incomingStatusOptions : outgoingStatusOptions;
 
   return (
     <div className="space-y-6">
@@ -147,14 +145,14 @@ export default function Letters({ type }) {
             {type === 'INCOMING' ? <Inbox size={22} /> : <Send size={22} />}
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}</h1>
+            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}</h1>
             <div className="mt-1"><PeriodLabel timeRange={timeRange} /></div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register outgoing letter'}</button>
           <ExportButtons
-            title={type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}
+            title={type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}
             periodLabel={formatRangeLabel(timeRange)}
             columns={letterExportColumns}
             rows={filteredLetters}
@@ -170,15 +168,11 @@ export default function Letters({ type }) {
 
       {/* ── Filter toolbar ── */}
       <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.6fr)_repeat(2,minmax(0,1fr))_auto]">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_auto]">
           <div className="relative">
             <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input className="input pl-9" placeholder="Search subject, sender, reference number…" value={query} onChange={(event) => setQuery(event.target.value)} />
           </div>
-          <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="">All statuses</option>
-            {statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </select>
           <select className="input" value={priority} onChange={(event) => setPriority(event.target.value)}>
             <option value="">All priorities</option>
             <option value="URGENT">Urgent</option>
@@ -193,7 +187,7 @@ export default function Letters({ type }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4 dark:border-white/10">
           <div>
             <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">
-              {type === 'INCOMING' ? 'Received Letter Register' : 'Outgoing Letter Register'}
+              {type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}
             </h2>
             <p className="mt-0.5 text-xs font-medium text-slate-400">Select a reference number to open the letter's details.</p>
           </div>
@@ -244,7 +238,7 @@ export default function Letters({ type }) {
               {form.senderOrganizationOption === otherInstitutionValue && (
                 <input className="input" placeholder="Enter institution name" value={form.customSenderOrganization} onChange={(e) => setForm({ ...form, customSenderOrganization: e.target.value })} required />
               )}
-              <input className="input" placeholder="From whom sent / signatory (optional)" value={form.sender} onChange={(e) => setForm({ ...form, sender: e.target.value })} />
+              <input className="input" placeholder="From whom sent" value={form.sender} onChange={(e) => setForm({ ...form, sender: e.target.value })} />
               <input className="input" placeholder="Recipient named on letter (optional)" value={form.recipient} onChange={(e) => setForm({ ...form, recipient: e.target.value })} />
             </>
           ) : (

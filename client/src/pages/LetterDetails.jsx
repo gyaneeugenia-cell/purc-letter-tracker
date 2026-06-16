@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, FileText, Pencil, Route, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, Pencil, Route, Trash2 } from 'lucide-react';
 import { http } from '../api/http.js';
 import { notifyLettersChanged } from '../api/letterEvents.js';
 import { StatusChip } from '../components/ui/StatusChip.jsx';
@@ -66,7 +66,7 @@ function displayDestination(letter) {
 }
 
 function displayType(letter) {
-  return letter.type === 'INCOMING' ? 'Received' : 'Outgoing';
+  return letter.type === 'INCOMING' ? 'Received' : 'Dispatched';
 }
 
 export default function LetterDetails() {
@@ -257,7 +257,7 @@ export default function LetterDetails() {
         ['Registry number', letter.registryNumber],
         ['No. of letter', letter.letterNumber],
         ['Institution letter came from', letter.senderOrganization || letter.sender],
-        ['From whom sent / signatory', letter.sender],
+        ['From whom sent', letter.sender],
         ['Recipient directorate', letter.routeDepartment],
         ['Recipient named on letter', letter.recipient],
         ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-']
@@ -298,19 +298,10 @@ export default function LetterDetails() {
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <section className="space-y-6">
           <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Letter preview</h2>
-            <div className="mt-4 grid min-h-56 place-items-center rounded-xl border border-dashed border-slate-300 bg-slate-50/60 text-center dark:border-white/10 dark:bg-white/5">
-              <div>
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 text-cobalt dark:bg-blue-900/30 dark:text-blue-300">
-                  <FileText size={28} />
-                </div>
-                <p className="mt-3 font-semibold text-slate-700 dark:text-slate-200">{Number(letter.attachments) > 0 ? 'Primary official letter document' : 'No attachment recorded'}</p>
-                <button className="secondary-button mx-auto mt-4" onClick={downloadSummary}><Download size={16} /> Download summary</button>
-              </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Activity timeline</h2>
+              <button className="secondary-button" onClick={downloadSummary}><Download size={16} /> Download summary</button>
             </div>
-          </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
-            <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Activity timeline</h2>
             <div className="mt-5 space-y-0">
               {(letter.timeline || []).map((item, index, arr) => (
                 <div key={item.id} className="relative flex gap-4 pb-6 last:pb-0">
@@ -421,7 +412,7 @@ export default function LetterDetails() {
               {editForm.senderOrganizationOption === otherInstitutionValue && (
                 <input className="input" placeholder="Enter institution name" value={editForm.customSenderOrganization} onChange={(event) => setEditForm({ ...editForm, customSenderOrganization: event.target.value })} required />
               )}
-              <input className="input" placeholder="From whom sent / signatory (optional)" value={editForm.sender} onChange={(event) => setEditForm({ ...editForm, sender: event.target.value })} />
+              <input className="input" placeholder="From whom sent" value={editForm.sender} onChange={(event) => setEditForm({ ...editForm, sender: event.target.value })} />
               <input className="input" placeholder="Recipient named on letter (optional)" value={editForm.recipient} onChange={(event) => setEditForm({ ...editForm, recipient: event.target.value })} />
             </>
           ) : (

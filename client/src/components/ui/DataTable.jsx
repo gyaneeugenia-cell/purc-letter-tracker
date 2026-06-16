@@ -132,7 +132,7 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
                 </td>
                 {operational ? (
                   <>
-                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{letter.type === 'INCOMING' ? 'Received' : 'Outgoing'}</td>
+                    <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{letter.type === 'INCOMING' ? 'Received' : 'Dispatched'}</td>
                     <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{institutionOrRecipient(letter)}</td>
                     <td className="max-w-sm px-4 py-4 text-slate-800 dark:text-slate-100">{letter.subject}</td>
                     <td className="px-4 py-4"><StatusChip status={letter.status} /></td>

@@ -141,7 +141,7 @@ export default function Dashboard() {
             <select className="input" value={letterType} onChange={(event) => { setLetterType(event.target.value); setStatus(''); }}>
               <option value="">All letter types</option>
               <option value="INCOMING">Received</option>
-              <option value="OUTGOING">Outgoing</option>
+              <option value="OUTGOING">Dispatched</option>
             </select>
           </label>
           <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">

@@ -22,7 +22,7 @@ const STATUS_LABELS = {
   RECEIVED: 'Received',
   DISPATCHED: 'Dispatched'
 };
-const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Outgoing' };
+const TYPE_LABELS = { INCOMING: 'Received', OUTGOING: 'Dispatched' };
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS departments (

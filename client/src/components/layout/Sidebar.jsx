@@ -4,7 +4,7 @@ import { Archive, BarChart3, FileSearch, Inbox, LayoutDashboard, Send, ShieldChe
 const nav = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Received Letter Register', to: '/incoming', icon: Inbox },
-  { label: 'Outgoing Letter Register', to: '/outgoing', icon: Send },
+  { label: 'Dispatched Letter Register', to: '/outgoing', icon: Send },
   { label: 'Search', to: '/search', icon: FileSearch },
   { label: 'Tracking Timeline', to: '/timeline', icon: Archive },
   { label: 'Analytics', to: '/analytics', icon: BarChart3 },

@@ -100,7 +100,7 @@ export default function Analytics() {
       <div className="min-w-[200px] rounded-xl border border-slate-200 bg-white p-4 text-sm shadow-2xl dark:border-white/10 dark:bg-slate-900">
         <p className="mb-2 font-bold text-ink dark:text-white">{tooltipLabel}</p>
         <p className="font-semibold text-purcBlue dark:text-blue-300">Total Letters Received: {received}</p>
-        <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Sent: {dispatched}</p>
+        <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Dispatched: {dispatched}</p>
         {awaiting > 0 && (
           <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Outgoing letters at ES: {awaiting}</p>
         )}
@@ -174,7 +174,7 @@ export default function Analytics() {
   const flowExportColumns = [
     { header: 'Period', accessor: (b) => b.tooltipLabel || b.month },
     { header: 'Total Letters Received', accessor: (b) => b.incoming },
-    { header: 'Letters Sent', accessor: (b) => b.dispatchedExternally }
+    { header: 'Letters Dispatched', accessor: (b) => b.dispatchedExternally }
   ];
   const priorityExportColumns = [
     { header: 'Priority', accessor: (p) => p.name },
@@ -194,7 +194,7 @@ export default function Analytics() {
             <div>
               <h2 className="flex items-center gap-2 text-base font-bold text-ink dark:text-white">
                 <TrendingUp size={18} className="text-purcBlue dark:text-blue-300" />
-                Total Letters Received vs Letters Sent
+                Total Letters Received vs Letters Dispatched
               </h2>
               <p className={`mt-1 text-xs font-medium ${mutedText}`}>
                 Compares letters received by the Commission against letters confirmed as sent out by ES, grouped by the selected period.
@@ -203,7 +203,7 @@ export default function Analytics() {
             <ChartExport
               getNode={() => flowChartRef.current}
               baseName="letters-received-vs-sent"
-              excel={{ title: 'Letters Received vs Letters Sent', periodLabel, columns: flowExportColumns, rows: flowData }}
+              excel={{ title: 'Letters Received vs Letters Dispatched', periodLabel, columns: flowExportColumns, rows: flowData }}
             />
           </div>
 
@@ -211,7 +211,7 @@ export default function Analytics() {
           <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {[
               { label: 'Total Letters Received', value: incomingTotal, accent: CHART.blue, tone: 'text-purcBlue dark:text-blue-200', big: true },
-              { label: 'Total Letters Sent', value: dispatchedExternallyTotal, accent: CHART.red, tone: 'text-purcRed dark:text-red-200', big: true },
+              { label: 'Total Letters Dispatched', value: dispatchedExternallyTotal, accent: CHART.red, tone: 'text-purcRed dark:text-red-200', big: true },
               { label: 'Total Letters', value: combinedTotal, accent: CHART.teal, tone: 'text-teal dark:text-teal-300', big: true },
               { label: 'Busiest Period', value: busiestFlowBucket?.tooltipLabel || '—', accent: '#94A3B8', tone: 'text-slate-700 dark:text-slate-100', big: false }
             ].map((item) => (
@@ -233,7 +233,7 @@ export default function Analytics() {
                 <Tooltip content={<FlowTooltip />} />
                 <Legend content={<FlowLegend />} />
                 <Bar name="Total Letters Received" dataKey="incoming" fill={CHART.blue} radius={[8, 8, 0, 0]} maxBarSize={42} />
-                <Bar name="Letters Sent" dataKey="dispatchedExternally" fill={CHART.red} radius={[8, 8, 0, 0]} maxBarSize={42} />
+                <Bar name="Letters Dispatched" dataKey="dispatchedExternally" fill={CHART.red} radius={[8, 8, 0, 0]} maxBarSize={42} />
               </BarChart>
             </ResponsiveContainer>
           </div>
