@@ -17,8 +17,6 @@ export default function Search() {
   const [priority, setPriority] = useState('');
   const [department, setDepartment] = useState(searchParams.get('department') || '');
   const [party, setParty] = useState(searchParams.get('party') || '');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [rows, setRows] = useState([]);
   const [breakdown, setBreakdown] = useState({ received: 0, dispatched: 0 });
 
@@ -36,7 +34,8 @@ export default function Search() {
       : 'Utility / institution';
 
   function buildParams() {
-    const params = { q: query, type, priority, department, party, dateFrom, dateTo };
+    // The date range comes from the global reporting period shown at the top.
+    const params = { q: query, type, priority, department, party, dateFrom: timeRange.from, dateTo: timeRange.to };
     return Object.fromEntries(Object.entries(params).filter(([, v]) => v));
   }
 
@@ -51,8 +50,6 @@ export default function Search() {
     setPriority('');
     setDepartment('');
     setParty('');
-    setDateFrom('');
-    setDateTo('');
     setQuery('');
   }
 
@@ -62,14 +59,14 @@ export default function Search() {
     setParty('');
   }
 
-  // Live, debounced search — re-runs whenever any filter changes.
+  // Live, debounced search — re-runs whenever any filter or the global period changes.
   useEffect(() => {
     const timeout = window.setTimeout(runSearch, 180);
     return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, type, priority, department, party, dateFrom, dateTo]);
+  }, [query, type, priority, department, party, timeRange.from, timeRange.to]);
 
-  const hasActiveFilters = Boolean(query || type || priority || department || party || dateFrom || dateTo);
+  const hasActiveFilters = Boolean(query || type || priority || department || party);
 
   return (
     <div className="space-y-5">
@@ -129,14 +126,6 @@ export default function Search() {
             <datalist id="search-institutions">
               {institutionOptions.map((inst) => <option key={inst} value={inst} />)}
             </datalist>
-          </label>
-          <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Date from
-            <input className="input" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-          </label>
-          <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
-            Date to
-            <input className="input" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
           </label>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

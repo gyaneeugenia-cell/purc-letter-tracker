@@ -211,7 +211,16 @@ function formatBucketTooltip(date, groupBy) {
 
 function getVolumeBuckets(items, range) {
   const buckets = new Map();
-  let cursor = bucketStart(range.from, range.groupBy);
+  // Don't draw empty leading periods before any data exists (e.g. the
+  // "All Records" range starts in 2020, but the first letter may be in 2026).
+  // Start the chart at the earliest actual letter date within the range.
+  const datesInRange = filterByRange(items, range)
+    .map((letter) => getLetterDate(letter).getTime())
+    .filter((time) => !Number.isNaN(time));
+  const earliest = datesInRange.length ? new Date(Math.min(...datesInRange)) : range.from;
+  const effectiveFrom = earliest.getTime() > range.from.getTime() ? earliest : range.from;
+
+  let cursor = bucketStart(effectiveFrom, range.groupBy);
   const last = bucketStart(range.to, range.groupBy);
 
   while (cursor.getTime() <= last.getTime()) {
