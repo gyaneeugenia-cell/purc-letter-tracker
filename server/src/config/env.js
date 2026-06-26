@@ -13,7 +13,7 @@ export const env = {
   // AI assistant. Set EITHER provider's key in the Render dashboard to enable.
   // Google Gemini (free tier — no card required):
   geminiApiKey: process.env.GEMINI_API_KEY || '',
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   // Anthropic Claude (paid):
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6'
