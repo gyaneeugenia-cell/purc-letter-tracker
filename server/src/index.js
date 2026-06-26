@@ -18,6 +18,7 @@ import { reportsRouter } from './modules/reports/reports.routes.js';
 import { auditRouter } from './modules/audit/audit.routes.js';
 import { searchRouter } from './modules/search/search.routes.js';
 import { adminRouter } from './modules/admin/admin.routes.js';
+import { assistantRouter } from './modules/assistant/assistant.routes.js';
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/reports', authenticate, reportsRouter);
 app.use('/api/audit-logs', authenticate, auditRouter);
 app.use('/api/search', authenticate, searchRouter);
 app.use('/api/admin', authenticate, adminRouter);
+app.use('/api/assistant', authenticate, assistantRouter);
 
 app.get('/api/tracking/:trackingNumber', (req, res) => {
   res.json({ trackingNumber: req.params.trackingNumber, message: 'Tracking endpoint active' });

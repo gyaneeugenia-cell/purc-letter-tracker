@@ -174,11 +174,11 @@ export function PeriodControls({ timeRange, setTimeRange, groupBy, setGroupBy, a
         aria-pressed={active}
         className={`flex min-w-[240px] max-w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm font-bold shadow-sm transition ${
           active
-            ? 'border-purcBlue bg-purcBlue text-white'
+            ? 'border-purcBlue bg-white text-slate-700 hover:text-purcBlue dark:border-blue-300 dark:bg-slate-800 dark:text-slate-100'
             : 'border-slate-200 bg-white text-slate-700 hover:border-purcBlue hover:text-purcBlue dark:border-white/10 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-blue-300'
         }`}
       >
-        <CalendarDays size={17} className={`shrink-0 ${active ? 'text-white' : 'text-purcBlue dark:text-blue-300'}`} />
+        <CalendarDays size={17} className="shrink-0 text-purcBlue dark:text-blue-300" />
         <span className="truncate">{formatRangeLabel(timeRange)}</span>
       </button>
 

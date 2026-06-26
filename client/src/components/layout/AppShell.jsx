@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar.jsx';
 import { Topbar } from './Topbar.jsx';
+import { Assistant } from '../ai/Assistant.jsx';
 
 export function AppShell() {
   return (
@@ -15,6 +16,7 @@ export function AppShell() {
           </main>
         </div>
       </div>
+      <Assistant />
     </div>
   );
 }
