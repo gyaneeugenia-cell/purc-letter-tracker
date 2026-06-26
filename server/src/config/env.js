@@ -10,7 +10,11 @@ export const env = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || '8h',
   databaseUrl: process.env.DATABASE_URL,
   uploadDir: process.env.UPLOAD_DIR || 'uploads',
-  // AI assistant (Claude). Set ANTHROPIC_API_KEY in the Render dashboard to enable.
+  // AI assistant. Set EITHER provider's key in the Render dashboard to enable.
+  // Google Gemini (free tier — no card required):
+  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+  // Anthropic Claude (paid):
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6'
 };

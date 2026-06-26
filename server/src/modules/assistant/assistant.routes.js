@@ -71,12 +71,84 @@ RULES:
 - If asked something outside this program or its data, briefly say it's outside the scope of the tracker.`;
 }
 
+// ── Google Gemini (free tier) ──
+async function askGemini(systemPrompt, history, question) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${env.geminiModel}:generateContent?key=${env.geminiApiKey}`;
+  const contents = [
+    ...history.map((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: String(m.content) }]
+    })),
+    { role: 'user', parts: [{ text: question }] }
+  ];
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: systemPrompt }] },
+      contents,
+      generationConfig: { maxOutputTokens: 1024, temperature: 0.4 }
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    console.error('Gemini API error:', response.status, detail);
+    throw new Error('gemini_failed');
+  }
+
+  const data = await response.json();
+  return (data.candidates?.[0]?.content?.parts || [])
+    .map((p) => p.text || '')
+    .join('\n')
+    .trim();
+}
+
+// ── Anthropic Claude (paid) ──
+async function askClaude(systemPrompt, history, question) {
+  const messages = [
+    ...history.map((m) => ({ role: m.role, content: String(m.content) })),
+    { role: 'user', content: question }
+  ];
+
+  const response = await fetch(ANTHROPIC_URL, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': env.anthropicApiKey,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: env.anthropicModel,
+      max_tokens: 1024,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      messages
+    })
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    console.error('Anthropic API error:', response.status, detail);
+    throw new Error('claude_failed');
+  }
+
+  const data = await response.json();
+  return (data.content || [])
+    .filter((block) => block.type === 'text')
+    .map((block) => block.text)
+    .join('\n')
+    .trim();
+}
+
 assistantRouter.post('/ask', async (req, res, next) => {
   try {
-    if (!env.anthropicApiKey) {
+    // Prefer the free Gemini provider; fall back to Claude if only that is configured.
+    const provider = env.geminiApiKey ? 'gemini' : env.anthropicApiKey ? 'claude' : null;
+    if (!provider) {
       return res.status(503).json({
         error: 'AI assistant not configured',
-        message: 'The AI assistant is not yet enabled. An administrator needs to set the ANTHROPIC_API_KEY environment variable on the server.'
+        message: 'The AI assistant is not yet enabled. An administrator needs to set the GEMINI_API_KEY (free) or ANTHROPIC_API_KEY environment variable on the server.'
       });
     }
 
@@ -84,42 +156,19 @@ assistantRouter.post('/ask', async (req, res, next) => {
     if (!question) return res.status(400).json({ error: 'A question is required.' });
 
     // Prior turns from the client, kept short for cost/latency.
-    const history = Array.isArray(req.body?.history) ? req.body.history.slice(-10) : [];
-    const messages = [
-      ...history
-        .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && m.content)
-        .map((m) => ({ role: m.role, content: String(m.content) })),
-      { role: 'user', content: question }
-    ];
+    const history = (Array.isArray(req.body?.history) ? req.body.history : [])
+      .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && m.content)
+      .slice(-10);
 
-    const response = await fetch(ANTHROPIC_URL, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': env.anthropicApiKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: env.anthropicModel,
-        max_tokens: 1024,
-        // Cache the large system block so repeated questions are cheaper/faster.
-        system: [{ type: 'text', text: buildSystemPrompt(), cache_control: { type: 'ephemeral' } }],
-        messages
-      })
-    });
-
-    if (!response.ok) {
-      const detail = await response.text();
-      console.error('Anthropic API error:', response.status, detail);
+    const systemPrompt = buildSystemPrompt();
+    let answer;
+    try {
+      answer = provider === 'gemini'
+        ? await askGemini(systemPrompt, history, question)
+        : await askClaude(systemPrompt, history, question);
+    } catch {
       return res.status(502).json({ error: 'The AI service could not be reached. Please try again.' });
     }
-
-    const data = await response.json();
-    const answer = (data.content || [])
-      .filter((block) => block.type === 'text')
-      .map((block) => block.text)
-      .join('\n')
-      .trim();
 
     res.json({ answer: answer || 'I could not generate an answer. Please rephrase your question.' });
   } catch (error) {
