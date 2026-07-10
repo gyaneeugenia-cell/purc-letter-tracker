@@ -1,3 +1,9 @@
+import dns from 'node:dns';
+// Render's network is IPv4-only for outbound connections. Some hosts (Gmail's
+// SMTP, in particular) resolve to IPv6 first, which fails with ENETUNREACH.
+// Prefer IPv4 so outbound email and database connections work reliably.
+dns.setDefaultResultOrder('ipv4first');
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -21,6 +27,10 @@ import { adminRouter } from './modules/admin/admin.routes.js';
 import { assistantRouter } from './modules/assistant/assistant.routes.js';
 
 const app = express();
+
+// Render terminates TLS at a proxy and sets X-Forwarded-For; trust it so
+// rate-limiting identifies clients correctly (and stops the validation error).
+app.set('trust proxy', 1);
 
 app.use(helmet({ contentSecurityPolicy: false }));
 // Reflect the request origin so the API works from any deployed front-end host.
