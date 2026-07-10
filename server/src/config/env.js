@@ -17,7 +17,11 @@ export const env = {
   // Anthropic Claude (paid):
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
   anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
-  // Email (password-reset requests). Use a Gmail address + 16-char App Password.
+  // Email — Brevo HTTP API (preferred: works on hosts that block SMTP ports).
+  brevoApiKey: process.env.BREVO_API_KEY || '',
+  // The "from" address shown to recipients. Must be a verified sender in Brevo.
+  mailFrom: process.env.MAIL_FROM || process.env.SMTP_USER || '',
+  // Email — Gmail SMTP fallback (a Gmail address + 16-char App Password).
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
   // Where password-reset requests are sent (defaults to the SMTP account).

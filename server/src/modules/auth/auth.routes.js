@@ -39,6 +39,35 @@ function getTransporter() {
   return transporter;
 }
 
+// True when at least one email provider is configured.
+function emailConfigured() {
+  return Boolean(env.brevoApiKey || (env.smtpUser && env.smtpPass));
+}
+
+// Send an email via Brevo's HTTP API (works where SMTP ports are blocked, e.g.
+// Render's free plan), falling back to Gmail SMTP when Brevo isn't configured.
+async function sendEmail({ to, subject, text, html }) {
+  if (env.brevoApiKey) {
+    const from = env.mailFrom || env.smtpUser;
+    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': env.brevoApiKey, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({
+        sender: { email: from, name: 'PURC Letter Tracker' },
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+        htmlContent: html
+      })
+    });
+    if (!resp.ok) throw new Error(`Brevo ${resp.status}: ${await resp.text()}`);
+    return;
+  }
+  const transport = getTransporter();
+  if (!transport) throw new Error('No email provider configured');
+  await transport.sendMail({ from: `PURC Letter Tracker <${env.smtpUser}>`, to, subject, text, html });
+}
+
 authRouter.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = users.find((item) => item.email.toLowerCase() === String(email || '').toLowerCase());
@@ -89,8 +118,7 @@ authRouter.post('/forgot-password', async (req, res) => {
     return res.status(400).json({ message: 'Please enter a valid email address.' });
   }
 
-  const transport = getTransporter();
-  if (!transport) {
+  if (!emailConfigured()) {
     return res.status(503).json({
       message: 'Email delivery is not switched on yet. Ask the administrator to add the email settings, then try again.'
     });
@@ -109,8 +137,7 @@ authRouter.post('/forgot-password', async (req, res) => {
     const link = `${base}/reset-password?token=${token}`;
     // Send in the background so the response is instant. Any failure is logged
     // to the server logs (visible in Render) for troubleshooting.
-    transport.sendMail({
-      from: `PURC Letter Tracker <${env.smtpUser}>`,
+    sendEmail({
       to: user.email,
       subject: 'Reset your PURC Letter Tracker password',
       text: `Hello,\n\nWe received a request to reset your password. Click the link below to choose a new one. This link expires in 1 hour.\n\n${link}\n\nIf you did not request this, you can safely ignore this email — your password will stay the same.\n\n— PURC Letter Tracker`,
