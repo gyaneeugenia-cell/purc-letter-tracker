@@ -24,8 +24,16 @@ function getTransporter() {
   if (!env.smtpUser || !env.smtpPass) return null;
   if (!transporter) {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: { user: env.smtpUser, pass: env.smtpPass }
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      // App passwords are shown with spaces; Gmail ignores them, so strip them.
+      auth: { user: env.smtpUser, pass: env.smtpPass.replace(/\s+/g, '') },
+      pool: true,
+      // Fail fast instead of hanging for minutes if Gmail can't be reached.
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000
     });
   }
   return transporter;
@@ -99,18 +107,19 @@ authRouter.post('/forgot-password', async (req, res) => {
     const base = process.env.PUBLIC_URL
       || `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}`;
     const link = `${base}/reset-password?token=${token}`;
-    try {
-      await transport.sendMail({
-        from: `PURC Letter Tracker <${env.smtpUser}>`,
-        to: user.email,
-        subject: 'Reset your PURC Letter Tracker password',
-        text: `Hello,\n\nWe received a request to reset your password. Click the link below to choose a new one. This link expires in 1 hour.\n\n${link}\n\nIf you did not request this, you can safely ignore this email — your password will stay the same.\n\n— PURC Letter Tracker`,
-        html: `<p>Hello,</p><p>We received a request to reset your password. Click the button below to choose a new one. This link expires in 1 hour.</p><p><a href="${link}" style="display:inline-block;background:#465ba8;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600">Reset my password</a></p><p>Or copy this link:<br>${link}</p><p>If you did not request this, you can safely ignore this email — your password will stay the same.</p><p>— PURC Letter Tracker</p>`
-      });
-    } catch (error) {
+    // Send in the background so the response is instant. Any failure is logged
+    // to the server logs (visible in Render) for troubleshooting.
+    transport.sendMail({
+      from: `PURC Letter Tracker <${env.smtpUser}>`,
+      to: user.email,
+      subject: 'Reset your PURC Letter Tracker password',
+      text: `Hello,\n\nWe received a request to reset your password. Click the link below to choose a new one. This link expires in 1 hour.\n\n${link}\n\nIf you did not request this, you can safely ignore this email — your password will stay the same.\n\n— PURC Letter Tracker`,
+      html: `<p>Hello,</p><p>We received a request to reset your password. Click the button below to choose a new one. This link expires in 1 hour.</p><p><a href="${link}" style="display:inline-block;background:#465ba8;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600">Reset my password</a></p><p>Or copy this link:<br>${link}</p><p>If you did not request this, you can safely ignore this email — your password will stay the same.</p><p>— PURC Letter Tracker</p>`
+    }).then(() => {
+      console.log('Password reset email sent to', user.email);
+    }).catch((error) => {
       console.error('Password reset email failed:', error?.message || error);
-      return res.status(502).json({ message: 'We could not send the email right now. Please try again in a moment.' });
-    }
+    });
   }
 
   return res.json({ message: 'If that email is registered, a password reset link is on its way. Please check your inbox (and spam folder).' });
