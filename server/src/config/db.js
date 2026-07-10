@@ -3,9 +3,15 @@ import { env } from './env.js';
 
 const { Pool } = pg;
 
+// Managed Postgres providers (Supabase, Neon, Render external, etc.) require SSL.
+// Local development does not. Detect a local URL and disable SSL only there.
+const url = env.databaseUrl || '';
+const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
+
 export const pool = env.databaseUrl
   ? new Pool({
       connectionString: env.databaseUrl,
+      ssl: isLocal ? false : { rejectUnauthorized: false },
       max: 10,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 8000

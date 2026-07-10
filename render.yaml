@@ -1,7 +1,3 @@
-databases:
-  - name: purc-db
-    plan: free
-
 services:
   - type: web
     name: purc-letter-tracker
@@ -14,7 +10,8 @@ services:
         value: production
       - key: JWT_SECRET
         generateValue: true
+      # Set DATABASE_URL manually in the Render dashboard to a free external
+      # Postgres (Supabase or Neon) connection string. Leaving it unset runs
+      # the app on in-memory data only.
       - key: DATABASE_URL
-        fromDatabase:
-          name: purc-db
-          property: connectionString
+        sync: false
