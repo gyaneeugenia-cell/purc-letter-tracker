@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
+import { http } from '../api/http.js';
 import { purcDepartments } from '../constants/departments.js';
 
 const administratorEmail = 'gyaneeugenia@gmail.com';
@@ -24,8 +25,27 @@ export default function Login() {
   const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', department: 'Executive Secretary', title: 'Officer' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState(null); // { type: 'success' | 'error', text }
 
   if (user) return <Navigate to="/" replace />;
+
+  async function onForgotPassword() {
+    if (!isValidEmail(email)) {
+      setResetMsg({ type: 'error', text: 'Please enter a valid email address.' });
+      return;
+    }
+    setResetLoading(true);
+    setResetMsg(null);
+    try {
+      const { data } = await http.post('/auth/forgot-password', { email });
+      setResetMsg({ type: 'success', text: data.message || 'Reset request sent.' });
+    } catch (err) {
+      setResetMsg({ type: 'error', text: err.message });
+    } finally {
+      setResetLoading(false);
+    }
+  }
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -85,10 +105,10 @@ export default function Login() {
       <div className="pointer-events-none fixed right-[9%] top-[37%] h-52 w-36 rounded-[45%] border border-red-100/70 bg-[radial-gradient(circle,rgba(227,30,47,0.10)_1px,transparent_1px)] [background-size:8px_8px]" />
 
       <header className="relative">
-        <div className="mx-auto flex h-20 max-w-6xl items-center justify-center gap-4 px-6 text-center">
-          <img src="/purc_logo.bmp" alt="PURC logo" className="h-16 w-16 shrink-0 rounded-full object-contain opacity-90 mix-blend-multiply" />
+        <div className="mx-auto flex min-h-20 max-w-6xl flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:flex-row sm:gap-4 sm:px-6">
+          <img src="/purc_logo.bmp" alt="PURC logo" className="h-12 w-12 shrink-0 rounded-full object-contain opacity-90 mix-blend-multiply sm:h-16 sm:w-16" />
           <div className="min-w-0 text-center">
-            <p className="whitespace-nowrap text-[clamp(1.5rem,2.1vw,2.55rem)] font-black tracking-tight text-ink">PURC Letter & Document Tracking System</p>
+            <p className="text-balance text-[clamp(1.05rem,4.5vw,2.55rem)] font-black leading-tight tracking-tight text-ink">PURC Letter &amp; Document Tracking System</p>
           </div>
         </div>
       </header>
@@ -129,7 +149,7 @@ export default function Login() {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-purcBlue">
-              <button type="button" onClick={() => setSupportModal('forgot')} className="inline-flex items-center gap-2 hover:text-ink">
+              <button type="button" onClick={() => { setResetMsg(null); setSupportModal('forgot'); }} className="inline-flex items-center gap-2 hover:text-ink">
                 <LockKeyhole size={14} /> Forgot password?
               </button>
               <button type="button" onClick={() => setSupportModal('admin')} className="inline-flex items-center gap-2 hover:text-ink">
@@ -149,9 +169,26 @@ export default function Login() {
       <Modal open={Boolean(supportModal)} title={supportModal === 'forgot' ? 'Password Reset' : 'Contact Administrator'} onClose={() => setSupportModal(null)}>
         {supportModal === 'forgot' ? (
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">Enter your PURC email address and the system administrator will receive a reset request.</p>
-            <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} />
-            <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Send reset request</button>
+            <p className="text-sm text-slate-600">Enter your PURC email address. We will email you a confirmation and notify the system administrator to reset your password.</p>
+            <input
+              className="input"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+            {resetMsg && (
+              <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>
+                {resetMsg.text}
+              </p>
+            )}
+            {resetMsg?.type === 'success' ? (
+              <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Close</button>
+            ) : (
+              <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={onForgotPassword}>
+                {resetLoading ? 'Sending…' : 'Send reset request'}
+              </button>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

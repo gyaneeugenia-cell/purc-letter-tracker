@@ -16,5 +16,10 @@ export const env = {
   geminiModel: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
   // Anthropic Claude (paid):
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
-  anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6'
+  anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6',
+  // Email (password-reset requests). Use a Gmail address + 16-char App Password.
+  smtpUser: process.env.SMTP_USER || '',
+  smtpPass: process.env.SMTP_PASS || '',
+  // Where password-reset requests are sent (defaults to the SMTP account).
+  adminEmail: process.env.ADMIN_EMAIL || process.env.SMTP_USER || ''
 };

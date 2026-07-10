@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { Menu, Moon, Sun } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -16,16 +16,23 @@ const pageTitles = [
   { match: (path) => path.startsWith('/letters'), eyebrow: 'Official letter record', title: 'Letter Details' }
 ];
 
-export function Topbar() {
+export function Topbar({ onMenuClick }) {
   const { user, logout, theme, setTheme } = useAuth();
   const location = useLocation();
   const page = pageTitles.find((item) => item.match(location.pathname)) || pageTitles[0];
 
   return (
     <header className="relative z-20 bg-transparent dark:bg-slate-950/40">
-      <div className="flex h-20 items-start justify-between gap-4 px-4 pt-2 lg:px-8">
-        <div className="min-w-0 pt-0">
-          <h1 className="truncate text-2xl font-bold tracking-tight text-slate-700 dark:text-slate-200">{page.title}</h1>
+      <div className="flex h-20 items-center justify-between gap-3 px-4 pt-2 lg:px-8">
+        <div className="flex min-w-0 items-center gap-2 pt-0">
+          <button
+            onClick={onMenuClick}
+            className="icon-button shrink-0 lg:hidden"
+            aria-label="Open navigation menu"
+          >
+            <Menu size={20} />
+          </button>
+          <h1 className="truncate text-xl font-bold tracking-tight text-slate-700 dark:text-slate-200 sm:text-2xl">{page.title}</h1>
         </div>
         <div className="flex flex-1 items-center justify-end gap-3 pt-0">
           <button className="icon-button" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="Toggle theme">
