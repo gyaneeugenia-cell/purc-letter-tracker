@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Eye, EyeOff, LockKeyhole, Mail, UserRound } from 'lucide-react';
+import { Eye, EyeOff, LockKeyhole, UserRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 import { http } from '../api/http.js';
 import { purcDepartments } from '../constants/departments.js';
-
-const administratorEmail = 'gyaneeugenia@gmail.com';
-const administratorSubject = 'PURC Tracker Administrator Support';
 
 // Basic but solid email format check.
 function isValidEmail(value) {
@@ -86,18 +83,6 @@ export default function Login() {
     }
   }
 
-  const administratorMailBody = [
-    'Hello Ephraim,',
-    '',
-    'I need help with the PURC Letter & Document Tracking System.',
-    '',
-    `My email: ${email}`,
-    'Issue: ',
-    '',
-    'Thank you.'
-  ].join('\n');
-  const administratorMailUrl = `mailto:${administratorEmail}?subject=${encodeURIComponent(administratorSubject)}&body=${encodeURIComponent(administratorMailBody)}`;
-
   return (
     <div className="min-h-screen overflow-y-auto bg-[#f7f9fd] text-slate-950">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_85%,rgba(70,91,168,0.14),transparent_28%),radial-gradient(circle_at_82%_50%,rgba(227,30,47,0.12),transparent_30%)]" />
@@ -148,12 +133,9 @@ export default function Login() {
               or
               <span className="h-px flex-1 bg-slate-200" />
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-purcBlue">
+            <div className="flex items-center justify-center text-xs font-bold text-purcBlue">
               <button type="button" onClick={() => { setResetMsg(null); setSupportModal('forgot'); }} className="inline-flex items-center gap-2 hover:text-ink">
                 <LockKeyhole size={14} /> Forgot password?
-              </button>
-              <button type="button" onClick={() => setSupportModal('admin')} className="inline-flex items-center gap-2 hover:text-ink">
-                <Mail size={14} /> Contact administrator
               </button>
             </div>
             <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3 text-center text-sm font-bold text-slate-700">
@@ -166,46 +148,32 @@ export default function Login() {
         </section>
       </div>
       </main>
-      <Modal open={Boolean(supportModal)} title={supportModal === 'forgot' ? 'Password Reset' : 'Contact Administrator'} onClose={() => setSupportModal(null)}>
-        {supportModal === 'forgot' ? (
-          <div className="space-y-4">
-            <p className="text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
-            <label className="block text-left">
-              <span className="text-sm font-bold text-slate-700">Email</span>
-              <input
-                className="input mt-2"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-              />
-            </label>
-            {resetMsg && (
-              <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>
-                {resetMsg.text}
-              </p>
-            )}
-            {resetMsg?.type === 'success' ? (
-              <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Close</button>
-            ) : (
-              <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={onForgotPassword}>
-                {resetLoading ? 'Sending…' : 'Send reset request'}
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-200">
-              For access changes, account unlocks, or role updates, email Ephraim in the Executive Secretary directorate.
+      <Modal open={Boolean(supportModal)} title="Password Reset" onClose={() => setSupportModal(null)}>
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
+          <label className="block text-left">
+            <span className="text-sm font-bold text-slate-700">Email</span>
+            <input
+              className="input mt-2"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+            />
+          </label>
+          {resetMsg && (
+            <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>
+              {resetMsg.text}
             </p>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-white">
-              {administratorEmail}
-            </div>
-            <a className="primary-button w-full" href={administratorMailUrl}>
-              Email administrator
-            </a>
-          </div>
-        )}
+          )}
+          {resetMsg?.type === 'success' ? (
+            <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Close</button>
+          ) : (
+            <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={onForgotPassword}>
+              {resetLoading ? 'Sending…' : 'Send reset request'}
+            </button>
+          )}
+        </div>
       </Modal>
       <Modal open={signupOpen} title="New User Registration" onClose={() => setSignupOpen(false)}>
         <form onSubmit={onSignup} className="grid gap-4 md:grid-cols-2">

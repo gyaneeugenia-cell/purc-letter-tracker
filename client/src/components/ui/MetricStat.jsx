@@ -2,8 +2,11 @@
 // a small uppercase label, a large tabular number, and a single PURC-blue
 // accent. No card, no shadow, no rounded container — whitespace does the work.
 export function MetricStat({ icon: Icon, label, value, trend }) {
-  const hasTrend = trend !== undefined && trend !== null && trend !== '';
-  const trendUp = Number(trend) >= 0;
+  // Only show a trend when it is a real, finite number. This avoids "NaN%"
+  // (which appears when a percentage is computed from a zero baseline).
+  const trendNum = Number(trend);
+  const hasTrend = trend !== undefined && trend !== null && trend !== '' && Number.isFinite(trendNum);
+  const trendUp = trendNum >= 0;
 
   return (
     <div className="flex flex-col gap-3 px-0 py-2 sm:px-8 sm:first:pl-0">
@@ -17,7 +20,7 @@ export function MetricStat({ icon: Icon, label, value, trend }) {
         </span>
         {hasTrend && (
           <span className={`text-xs font-semibold tabular-nums ${trendUp ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-            {trendUp ? '▲' : '▼'} {Math.abs(Number(trend))}%
+            {trendUp ? '▲' : '▼'} {Math.abs(trendNum)}%
           </span>
         )}
       </div>
