@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 import { v4 as uuid } from 'uuid';
 import { users } from '../../utils/sampleData.js';
@@ -9,6 +10,13 @@ import { authenticate, signUserToken } from '../../middleware/auth.js';
 export const authRouter = Router();
 
 const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+const hashToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
+
+// Never leak the password hash or reset-token fields to the client.
+function sanitize(user) {
+  const { passwordHash, resetTokenHash, resetTokenExpires, ...safe } = user;
+  return safe;
+}
 
 // Lazily create the Gmail transporter (only when credentials are configured).
 let transporter = null;
@@ -31,8 +39,7 @@ authRouter.post('/login', async (req, res) => {
     return res.status(401).json({ message: 'Invalid email or password' });
   }
 
-  const { passwordHash, ...safeUser } = user;
-  res.json({ token: signUserToken(user), user: safeUser });
+  res.json({ token: signUserToken(user), user: sanitize(user) });
 });
 
 authRouter.post('/register', (req, res) => {
@@ -60,20 +67,12 @@ authRouter.post('/register', (req, res) => {
   };
   users.push(created);
 
-  const { passwordHash, ...safeUser } = created;
-  res.status(201).json({ token: signUserToken(created), user: safeUser });
+  res.status(201).json({ token: signUserToken(created), user: sanitize(created) });
 });
 
-// In-memory reset tokens: token -> { email, expires }. Cleared on use/expiry.
-const resetTokens = new Map();
+// Reset tokens are stored (hashed) on the user record so they survive server
+// restarts and free-tier sleep — the app persists users to the database.
 const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-function purgeExpiredTokens() {
-  const now = Date.now();
-  for (const [token, entry] of resetTokens) {
-    if (entry.expires < now) resetTokens.delete(token);
-  }
-}
 
 // Self-service: the user enters their email and receives a reset link directly.
 authRouter.post('/forgot-password', async (req, res) => {
@@ -89,14 +88,14 @@ authRouter.post('/forgot-password', async (req, res) => {
     });
   }
 
-  purgeExpiredTokens();
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
 
   // Only actually send when the account exists, but always reply the same way
   // so the form never reveals which emails are registered.
   if (user) {
     const token = uuid();
-    resetTokens.set(token, { email: user.email, expires: Date.now() + RESET_TTL_MS });
+    user.resetTokenHash = hashToken(token);
+    user.resetTokenExpires = Date.now() + RESET_TTL_MS;
     const base = process.env.PUBLIC_URL
       || `${req.headers['x-forwarded-proto'] || req.protocol}://${req.get('host')}`;
     const link = `${base}/reset-password?token=${token}`;
@@ -125,24 +124,18 @@ authRouter.post('/reset-password', (req, res) => {
     return res.status(400).json({ message: 'Password must be at least 8 characters.' });
   }
 
-  purgeExpiredTokens();
-  const entry = resetTokens.get(token);
-  if (!entry) {
+  const tokenHash = hashToken(token);
+  const user = token && users.find((u) => u.resetTokenHash === tokenHash);
+  if (!user || !user.resetTokenExpires || user.resetTokenExpires < Date.now()) {
     return res.status(400).json({ message: 'This reset link is invalid or has expired. Please request a new one.' });
   }
 
-  const user = users.find((u) => u.email.toLowerCase() === entry.email.toLowerCase());
-  if (!user) {
-    resetTokens.delete(token);
-    return res.status(400).json({ message: 'We could not find that account. Please request a new reset link.' });
-  }
-
   user.passwordHash = bcrypt.hashSync(password, 10);
-  resetTokens.delete(token);
+  delete user.resetTokenHash;
+  delete user.resetTokenExpires;
   return res.json({ message: 'Your password has been reset. You can now sign in with your new password.' });
 });
 
 authRouter.get('/me', authenticate, (req, res) => {
-  const { passwordHash, ...safeUser } = req.user;
-  res.json({ user: safeUser });
+  res.json({ user: sanitize(req.user) });
 });
