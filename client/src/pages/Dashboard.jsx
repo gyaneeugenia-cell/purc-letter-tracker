@@ -6,7 +6,7 @@ import { PeriodControls, formatRangeLabel, usePersistentPeriod } from '../compon
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
-import { MetricCard } from '../components/ui/MetricCard.jsx';
+import { MetricStat } from '../components/ui/MetricStat.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
 import { allStatusOptions, incomingStatusOptions, outgoingStatusOptions } from '../constants/statuses.js';
 import { institutionSearchTerms } from '../constants/institutions.js';
@@ -70,7 +70,7 @@ export default function Dashboard() {
   }, [data, letterType, query, sortBy, status]);
 
   if (!data) {
-    return <div className="grid gap-4 md:grid-cols-4">{Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-32" />)}</div>;
+    return <div className="grid gap-6 sm:grid-cols-2">{Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-24" />)}</div>;
   }
 
   const icons = [Inbox, Send];
@@ -83,7 +83,7 @@ export default function Dashboard() {
       : allStatusOptions;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="relative z-50">
         <PeriodControls
           timeRange={timeRange}
@@ -92,18 +92,23 @@ export default function Dashboard() {
           setGroupBy={setGroupBy}
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
+
+      {/* Metrics — flat, borderless, whitespace-led */}
+      <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-200 dark:sm:divide-white/10">
         {data.metrics.map((metric, index) => (
-          <MetricCard key={metric.label} label={metric.label} value={metric.value} trend={metric.trend} tone={metric.tone} icon={icons[index]} compact />
+          <MetricStat key={metric.label} label={metric.label} value={metric.value} trend={metric.trend} icon={icons[index]} />
         ))}
-      </div>
-      <section className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
-        {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-white/10">
+      </section>
+
+      <div className="h-px bg-slate-200 dark:bg-white/10" />
+
+      {/* Letter register — open layout, no card container */}
+      <section className="space-y-5">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-base font-black tracking-tight text-ink dark:text-white">Letter Register</h2>
-            <p className="mt-0.5 text-xs font-medium text-slate-400">
-              Search, sort, and open letters recorded within the selected reporting period.
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">Letter Register</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              Letters recorded within {rangeLabel.toLowerCase()}.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -123,8 +128,8 @@ export default function Dashboard() {
         </div>
 
         {/* Filters */}
-        <div className="grid gap-3 px-5 py-4 md:grid-cols-2 xl:grid-cols-4">
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <label className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
             Search register
             <div className="relative">
               <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -136,7 +141,7 @@ export default function Dashboard() {
               />
             </div>
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <label className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
             Letter type
             <select className="input" value={letterType} onChange={(event) => { setLetterType(event.target.value); setStatus(''); }}>
               <option value="">All letter types</option>
@@ -144,14 +149,14 @@ export default function Dashboard() {
               <option value="OUTGOING">Dispatched</option>
             </select>
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <label className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
             Status
             <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">All statuses</option>
               {statusOptionsForType.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
-          <label className="grid gap-1.5 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <label className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
             Sort by
             <select className="input" value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
               <option value="newest">Newest first</option>
@@ -161,17 +166,13 @@ export default function Dashboard() {
           </label>
         </div>
 
-        {/* Count strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 px-5 py-3 dark:border-white/10">
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-white/10 dark:text-slate-200">{registerLetters.length} letter record(s)</span>
-          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-purcBlue dark:bg-blue-900/50 dark:text-blue-100">
-            Selected period: {rangeLabel}
-          </span>
+        {/* Count strip — plain text, no pills */}
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-500 dark:text-slate-400">
+          <span><span className="font-semibold text-slate-900 tabular-nums dark:text-white">{registerLetters.length}</span> letter record(s)</span>
+          <span>Selected period: <span className="font-medium text-slate-700 dark:text-slate-200">{rangeLabel}</span></span>
         </div>
 
-        <div className="p-2">
-          <DataTable rows={registerLetters} embedded operational />
-        </div>
+        <DataTable rows={registerLetters} embedded operational />
       </section>
     </div>
   );

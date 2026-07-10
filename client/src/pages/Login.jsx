@@ -169,14 +169,17 @@ export default function Login() {
       <Modal open={Boolean(supportModal)} title={supportModal === 'forgot' ? 'Password Reset' : 'Contact Administrator'} onClose={() => setSupportModal(null)}>
         {supportModal === 'forgot' ? (
           <div className="space-y-4">
-            <p className="text-sm text-slate-600">Enter your PURC email address. We will email you a confirmation and notify the system administrator to reset your password.</p>
-            <input
-              className="input"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
+            <p className="text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
+            <label className="block text-left">
+              <span className="text-sm font-bold text-slate-700">Email</span>
+              <input
+                className="input mt-2"
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
             {resetMsg && (
               <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>
                 {resetMsg.text}
