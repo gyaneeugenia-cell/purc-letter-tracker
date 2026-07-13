@@ -57,6 +57,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY, title TEXT, message TEXT, status TEXT, created_at TEXT, data JSONB
 );
+-- Bookkeeping: records that the database has been seeded, so the sample data is
+-- never re-inserted after you clear the app for a fresh handover.
+CREATE TABLE IF NOT EXISTS app_meta (
+  key TEXT PRIMARY KEY, value TEXT
+);
 `;
 
 // How each in-memory row maps to explicit table columns (besides the JSONB `data`).
@@ -152,11 +157,27 @@ export async function initPersistence() {
   }
   try {
     await pool.query(SCHEMA);
-    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM letters');
-    if (rows[0].n === 0) {
-      // First run: seed the database from the built-in sample data.
+    const seededRes = await pool.query("SELECT 1 FROM app_meta WHERE key = 'seeded'");
+    const alreadySeeded = seededRes.rowCount > 0;
+    const markSeeded = () => pool.query(
+      "INSERT INTO app_meta (key, value) VALUES ('seeded', now()::text) ON CONFLICT (key) DO NOTHING"
+    );
+
+    if (process.env.RESET_DATA === 'true') {
+      // Fresh-start switch for handover: keep the user accounts and departments,
+      // but clear every letter record, movement, audit entry and notification.
+      await loadInto('users', TABLES.users);
+      await loadInto('departments', TABLES.departments);
+      [letters, movements, auditLogs, notifications].forEach((arr) => { arr.length = 0; });
       enabled = true;
       await persistAll();
+      await markSeeded();
+      console.log('[persistence] RESET_DATA=true — cleared all records; kept user accounts and departments. Remove RESET_DATA and redeploy.');
+    } else if (!alreadySeeded && (await pool.query('SELECT COUNT(*)::int AS n FROM letters')).rows[0].n === 0) {
+      // First run only: seed the database from the built-in sample data.
+      enabled = true;
+      await persistAll();
+      await markSeeded();
       console.log('[persistence] Database connected and seeded with sample data.');
     } else {
       // Restore saved data back into the in-memory arrays.
@@ -164,6 +185,7 @@ export async function initPersistence() {
         await loadInto(name, def);
       }
       enabled = true;
+      await markSeeded(); // records the marker for databases seeded before this change
       console.log('[persistence] Database connected — saved data restored.');
     }
 

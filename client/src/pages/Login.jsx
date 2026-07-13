@@ -196,7 +196,7 @@ export default function Login() {
         <div className="space-y-4">
           {resetStep === 'email' && (
             <>
-              <p className="text-sm text-slate-600">Enter your email to begin. You will answer your security question and choose a new password — no email required.</p>
+              <p className="text-sm text-slate-600">Enter your email to begin. You will answer your security question and choose a new password.</p>
               <label className="block text-left">
                 <span className="text-sm font-bold text-slate-700">Email</span>
                 <input
