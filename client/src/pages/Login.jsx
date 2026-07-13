@@ -19,24 +19,68 @@ export default function Login() {
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [supportModal, setSupportModal] = useState(null);
   const [signupOpen, setSignupOpen] = useState(false);
-  const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', department: 'Executive Secretary', title: 'Officer' });
+  const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', department: 'Executive Secretary', title: 'Officer', securityQuestion: '', securityAnswer: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Password reset (security-question flow — no email involved).
+  const [resetStep, setResetStep] = useState('email'); // 'email' | 'answer' | 'done'
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetQuestion, setResetQuestion] = useState('');
+  const [resetAnswer, setResetAnswer] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirm, setResetConfirm] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
   const [resetMsg, setResetMsg] = useState(null); // { type: 'success' | 'error', text }
 
   if (user) return <Navigate to="/" replace />;
 
-  async function onForgotPassword() {
-    if (!isValidEmail(email)) {
+  function openResetModal() {
+    setResetStep('email');
+    setResetEmail(email);
+    setResetQuestion('');
+    setResetAnswer('');
+    setResetNewPassword('');
+    setResetConfirm('');
+    setResetMsg(null);
+    setSupportModal('forgot');
+  }
+
+  // Step 1 — look up the security question for the email.
+  async function fetchSecurityQuestion() {
+    if (!isValidEmail(resetEmail)) {
       setResetMsg({ type: 'error', text: 'Please enter a valid email address.' });
       return;
     }
     setResetLoading(true);
     setResetMsg(null);
     try {
-      const { data } = await http.post('/auth/forgot-password', { email });
-      setResetMsg({ type: 'success', text: data.message || 'Reset request sent.' });
+      const { data } = await http.post('/auth/reset/question', { email: resetEmail });
+      setResetQuestion(data.question);
+      setResetStep('answer');
+    } catch (err) {
+      setResetMsg({ type: 'error', text: err.message });
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
+  // Step 2 — verify the answer and set a new password.
+  async function submitReset() {
+    if (resetNewPassword.length < 8) {
+      setResetMsg({ type: 'error', text: 'Password must be at least 8 characters.' });
+      return;
+    }
+    if (resetNewPassword !== resetConfirm) {
+      setResetMsg({ type: 'error', text: 'The two passwords do not match.' });
+      return;
+    }
+    setResetLoading(true);
+    setResetMsg(null);
+    try {
+      const { data } = await http.post('/auth/reset/verify', { email: resetEmail, answer: resetAnswer, password: resetNewPassword });
+      setResetStep('done');
+      setResetMsg({ type: 'success', text: data.message || 'Your password has been reset.' });
     } catch (err) {
       setResetMsg({ type: 'error', text: err.message });
     } finally {
@@ -134,7 +178,7 @@ export default function Login() {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
             <div className="flex items-center justify-center text-xs font-bold text-purcBlue">
-              <button type="button" onClick={() => { setResetMsg(null); setSupportModal('forgot'); }} className="inline-flex items-center gap-2 hover:text-ink">
+              <button type="button" onClick={openResetModal} className="inline-flex items-center gap-2 hover:text-ink">
                 <LockKeyhole size={14} /> Forgot password?
               </button>
             </div>
@@ -150,28 +194,58 @@ export default function Login() {
       </main>
       <Modal open={Boolean(supportModal)} title="Password Reset" onClose={() => setSupportModal(null)}>
         <div className="space-y-4">
-          <p className="text-sm text-slate-600">Enter your email and we will send you a link to reset your password.</p>
-          <label className="block text-left">
-            <span className="text-sm font-bold text-slate-700">Email</span>
-            <input
-              className="input mt-2"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </label>
-          {resetMsg && (
-            <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>
-              {resetMsg.text}
-            </p>
+          {resetStep === 'email' && (
+            <>
+              <p className="text-sm text-slate-600">Enter your email to begin. You will answer your security question and choose a new password — no email required.</p>
+              <label className="block text-left">
+                <span className="text-sm font-bold text-slate-700">Email</span>
+                <input
+                  className="input mt-2"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={resetEmail}
+                  onChange={(event) => setResetEmail(event.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); fetchSecurityQuestion(); } }}
+                />
+              </label>
+              {resetMsg && <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>{resetMsg.text}</p>}
+              <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={fetchSecurityQuestion}>
+                {resetLoading ? 'Checking…' : 'Continue'}
+              </button>
+            </>
           )}
-          {resetMsg?.type === 'success' ? (
-            <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Close</button>
-          ) : (
-            <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={onForgotPassword}>
-              {resetLoading ? 'Sending…' : 'Send reset request'}
-            </button>
+
+          {resetStep === 'answer' && (
+            <>
+              <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-purcBlue">Security question</p>
+                <p className="mt-1 text-sm font-semibold text-slate-700">{resetQuestion}</p>
+              </div>
+              <label className="block text-left">
+                <span className="text-sm font-bold text-slate-700">Your answer</span>
+                <input className="input mt-2" type="text" placeholder="Type your answer" value={resetAnswer} onChange={(e) => setResetAnswer(e.target.value)} />
+              </label>
+              <label className="block text-left">
+                <span className="text-sm font-bold text-slate-700">New password</span>
+                <input className="input mt-2" type="password" placeholder="Minimum 8 characters" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} />
+              </label>
+              <label className="block text-left">
+                <span className="text-sm font-bold text-slate-700">Confirm new password</span>
+                <input className="input mt-2" type="password" placeholder="Re-enter your new password" value={resetConfirm} onChange={(e) => setResetConfirm(e.target.value)} />
+              </label>
+              {resetMsg && <p className={`rounded-lg px-3 py-2 text-sm font-semibold ${resetMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-purcRed'}`}>{resetMsg.text}</p>}
+              <button className="primary-button w-full disabled:opacity-60" disabled={resetLoading} onClick={submitReset}>
+                {resetLoading ? 'Resetting…' : 'Reset password'}
+              </button>
+              <button className="text-xs font-bold text-slate-500 hover:text-ink" onClick={() => { setResetStep('email'); setResetMsg(null); }}>← Use a different email</button>
+            </>
+          )}
+
+          {resetStep === 'done' && (
+            <>
+              <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-700">{resetMsg?.text}</p>
+              <button className="primary-button w-full" onClick={() => setSupportModal(null)}>Back to sign in</button>
+            </>
           )}
         </div>
       </Modal>
@@ -203,6 +277,21 @@ export default function Login() {
                 {showSignupPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500 md:col-span-2">
+            Security question (used to reset your password)
+            <input className="input" list="security-questions" placeholder="e.g. What is your staff ID?" value={signupForm.securityQuestion} onChange={(event) => setSignupForm({ ...signupForm, securityQuestion: event.target.value })} required />
+            <datalist id="security-questions">
+              <option value="What is your staff ID?" />
+              <option value="In which town were you born?" />
+              <option value="What was the name of your first school?" />
+              <option value="What is your mother's maiden name?" />
+              <option value="What is your favourite book?" />
+            </datalist>
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500 md:col-span-2">
+            Answer
+            <input className="input" placeholder="Remember this — you'll need it to reset your password" value={signupForm.securityAnswer} onChange={(event) => setSignupForm({ ...signupForm, securityAnswer: event.target.value })} required />
           </label>
           {error && <p className="md:col-span-2 rounded-sm bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed">{error}</p>}
           <button className="primary-button md:col-span-2" disabled={loading}>{loading ? 'Creating account...' : 'Register and enter system'}</button>

@@ -12,8 +12,12 @@
 // Every DB call is wrapped in try/catch: if anything fails, the app silently
 // continues on in-memory data and never crashes.
 // ─────────────────────────────────────────────────────────────────────────
+import bcrypt from 'bcryptjs';
 import { pool } from './db.js';
 import { letters, users, departments, movements, auditLogs, notifications } from '../utils/sampleData.js';
+
+export const DEFAULT_SECURITY_QUESTION = 'In which city is PURC headquartered?';
+const DEFAULT_SECURITY_ANSWER = 'accra';
 
 let enabled = false;
 
@@ -171,6 +175,16 @@ export async function initPersistence() {
     // RECEIVED (received by the commission) and DISPATCHED (sent from the commission).
     letters.forEach((l) => {
       l.status = l.type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED';
+    });
+
+    // Ensure every account can self-reset its password: give any account that
+    // has no security question a default one (answer: "Accra"). New sign-ups
+    // set their own question and answer.
+    users.forEach((u) => {
+      if (!u.securityQuestion || !u.securityAnswerHash) {
+        u.securityQuestion = DEFAULT_SECURITY_QUESTION;
+        u.securityAnswerHash = bcrypt.hashSync(DEFAULT_SECURITY_ANSWER, 10);
+      }
     });
 
     // Auto-save every 15 seconds and on shutdown.
