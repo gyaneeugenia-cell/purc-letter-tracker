@@ -10,7 +10,7 @@ import { DataTable } from '../components/ui/DataTable.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
 import { purcDepartments } from '../constants/departments.js';
-import { institutionOptions, institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
+import { institutionGroups, institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
 
 function emptyForm(type) {
   return {
@@ -231,8 +231,12 @@ export default function Letters({ type }) {
                 Institution letter came from
                 <select className="input" value={form.senderOrganizationOption} onChange={(e) => setForm({ ...form, senderOrganizationOption: e.target.value, customSenderOrganization: '' })} required>
                   <option value="">Select institution</option>
-                  {institutionOptions.map((institution) => <option key={institution}>{institution}</option>)}
-                  <option value={otherInstitutionValue}>Other institution</option>
+                  {institutionGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.options.map((institution) => <option key={institution}>{institution}</option>)}
+                    </optgroup>
+                  ))}
+                  <option value={otherInstitutionValue}>Other (type a name)</option>
                 </select>
               </label>
               {form.senderOrganizationOption === otherInstitutionValue && (
@@ -247,8 +251,12 @@ export default function Letters({ type }) {
                 Recipient institution
                 <select className="input" value={form.recipientOption} onChange={(e) => setForm({ ...form, recipientOption: e.target.value, customRecipient: '' })} required>
                   <option value="">Select recipient institution</option>
-                  {institutionOptions.map((institution) => <option key={institution}>{institution}</option>)}
-                  <option value={otherInstitutionValue}>Other institution</option>
+                  {institutionGroups.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.options.map((institution) => <option key={institution}>{institution}</option>)}
+                    </optgroup>
+                  ))}
+                  <option value={otherInstitutionValue}>Other (type a name)</option>
                 </select>
               </label>
               {form.recipientOption === otherInstitutionValue && (

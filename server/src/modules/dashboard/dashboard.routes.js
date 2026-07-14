@@ -292,10 +292,11 @@ dashboardRouter.get('/summary', (req, res) => {
   const outgoing = periodLetters.filter((letter) => letter.type === 'OUTGOING');
   const previousIncoming = previousLetters.filter((letter) => letter.type === 'INCOMING');
 
-  // Metric CARDS use ALL-TIME counts. Two statuses only: every incoming letter
-  // is RECEIVED, every outgoing letter is DISPATCHED — so counting by type is exact.
-  const allReceived = letters.filter((l) => l.type === 'INCOMING');
-  const allDispatched = letters.filter((l) => l.type === 'OUTGOING');
+  // Metric CARDS count the SELECTED PERIOD, so they always agree with the letter
+  // register shown below them. Two statuses only: every incoming letter is
+  // RECEIVED, every outgoing letter is DISPATCHED — counting by type is exact.
+  const allReceived = periodLetters.filter((l) => l.type === 'INCOMING');
+  const allDispatched = periodLetters.filter((l) => l.type === 'OUTGOING');
 
   const registerLetters = [...periodLetters]
     .sort((a, b) => getLetterDate(b).getTime() - getLetterDate(a).getTime());
