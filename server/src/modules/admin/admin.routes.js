@@ -5,6 +5,13 @@ import { departments, users } from '../../utils/sampleData.js';
 
 export const adminRouter = Router();
 const assignableRoles = ['NORMAL_USER', 'SYSTEM_ADMIN'];
+const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+
+// Never expose password or security-answer hashes.
+function sanitize(user) {
+  const { passwordHash, securityAnswerHash, resetAttempts, resetLockUntil, ...safe } = user;
+  return safe;
+}
 
 function requireSystemAdmin(req, res, next) {
   if (req.user?.role !== 'SYSTEM_ADMIN') {
@@ -15,9 +22,43 @@ function requireSystemAdmin(req, res, next) {
 
 adminRouter.get('/users', (req, res) => {
   res.json({
-    data: users.map(({ passwordHash, ...user }) => user),
+    data: users.map(sanitize),
     total: users.length
   });
+});
+
+// Edit a user's information. Admins may edit anyone; everyone else may edit
+// only their own account.
+adminRouter.patch('/users/:id', (req, res) => {
+  const target = users.find((item) => item.id === req.params.id);
+  if (!target) return res.status(404).json({ message: 'User not found' });
+
+  const isSelf = req.user?.id === target.id;
+  const isAdmin = req.user?.role === 'SYSTEM_ADMIN';
+  if (!isAdmin && !isSelf) {
+    return res.status(403).json({ message: 'You can only edit your own information' });
+  }
+
+  const { name, email, title, department } = req.body || {};
+
+  if (name !== undefined) {
+    const value = String(name).trim();
+    if (!value) return res.status(400).json({ message: 'Name cannot be empty' });
+    target.name = value;
+    target.avatar = value.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  }
+  if (email !== undefined) {
+    const value = String(email).trim();
+    if (!isValidEmail(value)) return res.status(400).json({ message: 'Please enter a valid email address' });
+    if (users.some((u) => u.id !== target.id && u.email.toLowerCase() === value.toLowerCase())) {
+      return res.status(409).json({ message: 'A user with this email already exists' });
+    }
+    target.email = value;
+  }
+  if (title !== undefined) target.title = String(title).trim();
+  if (department !== undefined) target.department = String(department).trim();
+
+  res.json({ data: sanitize(target) });
 });
 
 adminRouter.get('/departments', (req, res) => {
@@ -42,8 +83,7 @@ adminRouter.post('/users', requireSystemAdmin, (req, res) => {
     avatar: name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
   };
   users.push(created);
-  const { passwordHash, ...safeUser } = created;
-  res.status(201).json({ data: safeUser });
+  res.status(201).json({ data: sanitize(created) });
 });
 
 adminRouter.patch('/users/:id/role', requireSystemAdmin, (req, res) => {
@@ -59,8 +99,7 @@ adminRouter.patch('/users/:id/role', requireSystemAdmin, (req, res) => {
   }
 
   user.role = role;
-  const { passwordHash, ...safeUser } = user;
-  res.json({ data: safeUser });
+  res.json({ data: sanitize(user) });
 });
 
 adminRouter.delete('/users/:id', requireSystemAdmin, (req, res) => {
@@ -70,6 +109,5 @@ adminRouter.delete('/users/:id', requireSystemAdmin, (req, res) => {
     return res.status(400).json({ message: 'You cannot delete your own active administrator account' });
   }
   const [deleted] = users.splice(index, 1);
-  const { passwordHash, ...safeUser } = deleted;
-  res.json({ data: safeUser });
+  res.json({ data: sanitize(deleted) });
 });

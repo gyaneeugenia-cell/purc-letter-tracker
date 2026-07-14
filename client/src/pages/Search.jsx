@@ -7,7 +7,7 @@ import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../component
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { purcDepartments } from '../constants/departments.js';
-import { institutionOptions } from '../constants/institutions.js';
+import { institutionGroups } from '../constants/institutions.js';
 
 export default function Search() {
   const { timeRange } = usePersistentPeriod();
@@ -116,16 +116,14 @@ export default function Search() {
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
             {institutionLabel}
-            <input
-              className="input"
-              list="search-institutions"
-              value={party}
-              onChange={(e) => setParty(e.target.value)}
-              placeholder="e.g. ECG, NEDCo, GWCL…"
-            />
-            <datalist id="search-institutions">
-              {institutionOptions.map((inst) => <option key={inst} value={inst} />)}
-            </datalist>
+            <select className="input" value={party} onChange={(e) => setParty(e.target.value)}>
+              <option value="">All institutions</option>
+              {institutionGroups.map((group) => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.options.map((inst) => <option key={inst} value={inst}>{inst}</option>)}
+                </optgroup>
+              ))}
+            </select>
           </label>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

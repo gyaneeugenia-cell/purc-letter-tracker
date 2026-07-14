@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShieldCheck, Trash2, UserPlus } from 'lucide-react';
+import { Pencil, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
 import { http } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
@@ -16,14 +16,54 @@ const userColumns = [
 ];
 
 export default function UserManagement() {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, updateProfile } = useAuth();
   const [users, setUsers] = useState([]);
   const [error, setError] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', role: 'NORMAL_USER', department: 'Executive Secretary', title: '' });
+  const [editUser, setEditUser] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', email: '', title: '', department: '' });
+  const [savingEdit, setSavingEdit] = useState(false);
   const isAdmin = currentUser?.role === 'SYSTEM_ADMIN';
 
   useEffect(() => { http.get('/admin/users').then((res) => setUsers(res.data.data)); }, []);
+
+  // Admins may edit anyone; everyone else may edit only their own account.
+  const canEdit = (user) => isAdmin || user.id === currentUser?.id;
+
+  function openEdit(user) {
+    setEditUser(user);
+    setEditForm({
+      name: user.name || '',
+      email: user.email || '',
+      title: user.title || '',
+      department: user.department || purcDepartments[0]
+    });
+    setError('');
+  }
+
+  async function saveEdit(event) {
+    event.preventDefault();
+    if (!editUser) return;
+    setSavingEdit(true);
+    setError('');
+    try {
+      let updated;
+      if (editUser.id === currentUser?.id) {
+        // Editing yourself — go through auth so the top bar stays in sync.
+        updated = await updateProfile(editForm);
+      } else {
+        const { data } = await http.patch(`/admin/users/${editUser.id}`, editForm);
+        updated = data.data;
+      }
+      setUsers((items) => items.map((item) => (item.id === editUser.id ? { ...item, ...updated } : item)));
+      setEditUser(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   async function deleteUser(user) {
     if (!isAdmin) return;
@@ -125,19 +165,56 @@ export default function UserManagement() {
                 </td>
                 <td className="px-4 py-4"><span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">ACTIVE</span></td>
                 <td className="px-4 py-4">
-                  <button
-                    onClick={() => deleteUser(user)}
-                    disabled={!isAdmin || user.id === currentUser?.id}
-                    className="inline-flex items-center gap-2 rounded-sm border border-red-200 px-3 py-2 text-xs font-bold text-purcRed transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
-                  >
-                    <Trash2 size={14} /> Delete
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => openEdit(user)}
+                      disabled={!canEdit(user)}
+                      title={canEdit(user) ? 'Edit this user' : 'You can only edit your own information'}
+                      className="inline-flex items-center gap-2 rounded-sm border border-blue-200 px-3 py-2 text-xs font-bold text-purcBlue transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                    >
+                      <Pencil size={14} /> Edit
+                    </button>
+                    <button
+                      onClick={() => deleteUser(user)}
+                      disabled={!isAdmin || user.id === currentUser?.id}
+                      className="inline-flex items-center gap-2 rounded-sm border border-red-200 px-3 py-2 text-xs font-bold text-purcRed transition hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                    >
+                      <Trash2 size={14} /> Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      <Modal open={Boolean(editUser)} title="Edit user information" onClose={() => setEditUser(null)}>
+        <form onSubmit={saveEdit} className="grid gap-4 sm:grid-cols-2">
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+            Full name / username
+            <input className="input" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+            Email
+            <input className="input" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required />
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+            Job title
+            <input className="input" value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} />
+          </label>
+          <label className="grid gap-1 text-xs font-bold uppercase tracking-wide text-slate-500">
+            Directorate
+            <select className="input" value={editForm.department} onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}>
+              {purcDepartments.map((d) => <option key={d}>{d}</option>)}
+            </select>
+          </label>
+          {error && <p className="sm:col-span-2 rounded-sm bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed">{error}</p>}
+          <div className="sm:col-span-2 flex flex-wrap justify-end gap-3">
+            <button type="button" onClick={() => setEditUser(null)} className="rounded-sm border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-white/10 dark:text-slate-300 dark:hover:bg-white/10">Cancel</button>
+            <button className="primary-button disabled:opacity-60" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button>
+          </div>
+        </form>
+      </Modal>
       <Modal open={open} title="Add User" onClose={() => setOpen(false)}>
         <form onSubmit={createUser} className="grid gap-4 md:grid-cols-2">
           <input className="input" placeholder="Full name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} required />
