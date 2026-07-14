@@ -116,7 +116,7 @@ export default function Dashboard() {
               <Plus size={15} /> Register received letter
             </button>
             <button type="button" className="soft-button" onClick={() => navigate('/outgoing?new=1')}>
-              <Plus size={15} /> Register outgoing letter
+              <Plus size={15} /> Register dispatched letter
             </button>
             <ExportButtons
               title="Letter Register"

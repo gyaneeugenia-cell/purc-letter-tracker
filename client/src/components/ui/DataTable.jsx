@@ -108,7 +108,7 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
   return (
     <>
       <div className={embedded ? 'overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10' : 'table-shell'}>
-        <table className="table-fixed text-left text-sm" style={{ width: `${tableWidth}px`, minWidth: `${tableWidth}px` }}>
+        <table className="table-fixed text-left text-sm [&_td]:break-words [&_th]:break-words" style={{ width: `${tableWidth}px`, minWidth: `${tableWidth}px` }}>
           <colgroup>
             {columnWidths.map((width, index) => (
               <col key={`${width}-${index}`} style={{ width: `${width}px` }} />
@@ -127,8 +127,8 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
             {rows.map((letter) => (
               <tr key={letter.id} className="group bg-white transition-colors odd:bg-slate-50/50 hover:bg-blue-50/60 dark:bg-transparent dark:odd:bg-white/5 dark:hover:bg-white/10">
                 <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{displayDateTime(letter)}</td>
-                <td className="px-4 py-4 font-semibold text-cobalt dark:text-blue-300">
-                  <Link to={`/letters/${letter.id}`} className="hover:underline">{letter.trackingNumber}</Link>
+                <td className="break-words px-4 py-4 align-top font-semibold text-cobalt dark:text-blue-300">
+                  <Link to={`/letters/${letter.id}`} className="break-words hover:underline">{letter.trackingNumber}</Link>
                 </td>
                 {operational ? (
                   <>

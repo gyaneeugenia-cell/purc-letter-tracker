@@ -119,6 +119,46 @@ authRouter.post('/reset/verify', (req, res) => {
   res.json({ message: 'Your password has been reset. You can now sign in with your new password.' });
 });
 
+// Update the signed-in user's own profile (name, email, title, directorate, password).
+authRouter.patch('/profile', authenticate, (req, res) => {
+  const user = users.find((u) => u.id === req.user.id);
+  if (!user) return res.status(404).json({ message: 'Account not found.' });
+
+  const { name, email, title, department, currentPassword, newPassword } = req.body || {};
+
+  if (name !== undefined) {
+    const value = String(name).trim();
+    if (!value) return res.status(400).json({ message: 'Name cannot be empty.' });
+    user.name = value;
+    user.avatar = value.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  if (email !== undefined) {
+    const value = String(email).trim();
+    if (!isValidEmail(value)) return res.status(400).json({ message: 'Please enter a valid email address.' });
+    if (users.some((u) => u.id !== user.id && u.email.toLowerCase() === value.toLowerCase())) {
+      return res.status(409).json({ message: 'That email is already in use by another account.' });
+    }
+    user.email = value;
+  }
+
+  if (title !== undefined) user.title = String(title).trim();
+  if (department !== undefined) user.department = String(department).trim();
+
+  if (newPassword) {
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters.' });
+    }
+    if (!bcrypt.compareSync(currentPassword || '', user.passwordHash)) {
+      return res.status(400).json({ message: 'Your current password is incorrect.' });
+    }
+    user.passwordHash = bcrypt.hashSync(newPassword, 10);
+  }
+
+  // Issue a fresh token so the new email/role travel in future requests.
+  res.json({ token: signUserToken(user), user: sanitize(user) });
+});
+
 authRouter.get('/me', authenticate, (req, res) => {
   res.json({ user: sanitize(req.user) });
 });

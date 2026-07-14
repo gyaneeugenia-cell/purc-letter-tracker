@@ -52,13 +52,21 @@ export function AuthProvider({ children }) {
     setUser(data.user);
   }
 
+  async function updateProfile(payload) {
+    const { data } = await http.patch('/auth/profile', payload);
+    if (data.token) localStorage.setItem('purc_token', data.token);
+    localStorage.setItem('purc_user', JSON.stringify(data.user));
+    setUser(data.user);
+    return data.user;
+  }
+
   function logout() {
     localStorage.removeItem('purc_token');
     localStorage.removeItem('purc_user');
     setUser(null);
   }
 
-  const value = useMemo(() => ({ user, login, register, logout, theme, setTheme }), [user, theme]);
+  const value = useMemo(() => ({ user, login, register, logout, updateProfile, theme, setTheme }), [user, theme]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
