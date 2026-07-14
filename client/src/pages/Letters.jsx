@@ -150,7 +150,7 @@ export default function Letters({ type }) {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register outgoing letter'}</button>
+          <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register dispatched letter'}</button>
           <ExportButtons
             title={type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}
             periodLabel={formatRangeLabel(timeRange)}

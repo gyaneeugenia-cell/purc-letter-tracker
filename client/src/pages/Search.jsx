@@ -7,7 +7,7 @@ import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../component
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { purcDepartments } from '../constants/departments.js';
-import { institutionGroups } from '../constants/institutions.js';
+import { institutionGroups, otherInstitutionValue } from '../constants/institutions.js';
 
 export default function Search() {
   const { timeRange } = usePersistentPeriod();
@@ -16,7 +16,10 @@ export default function Search() {
   const [type, setType] = useState(searchParams.get('type') || '');
   const [priority, setPriority] = useState('');
   const [department, setDepartment] = useState(searchParams.get('department') || '');
-  const [party, setParty] = useState(searchParams.get('party') || '');
+  const [partyOption, setPartyOption] = useState(searchParams.get('party') || '');
+  const [customParty, setCustomParty] = useState('');
+  // "Other" lets you type any institution that is not in the list.
+  const party = partyOption === otherInstitutionValue ? customParty.trim() : partyOption;
   const [rows, setRows] = useState([]);
   const [breakdown, setBreakdown] = useState({ received: 0, dispatched: 0 });
 
@@ -49,14 +52,16 @@ export default function Search() {
     setType('');
     setPriority('');
     setDepartment('');
-    setParty('');
+    setPartyOption('');
+    setCustomParty('');
     setQuery('');
   }
 
   function changeType(value) {
     setType(value);
     setDepartment('');
-    setParty('');
+    setPartyOption('');
+    setCustomParty('');
   }
 
   // Live, debounced search — re-runs whenever any filter or the global period changes.
@@ -116,14 +121,23 @@ export default function Search() {
           </label>
           <label className="grid gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
             {institutionLabel}
-            <select className="input" value={party} onChange={(e) => setParty(e.target.value)}>
+            <select className="input" value={partyOption} onChange={(e) => { setPartyOption(e.target.value); setCustomParty(''); }}>
               <option value="">All institutions</option>
               {institutionGroups.map((group) => (
                 <optgroup key={group.label} label={group.label}>
                   {group.options.map((inst) => <option key={inst} value={inst}>{inst}</option>)}
                 </optgroup>
               ))}
+              <option value={otherInstitutionValue}>Other (type a name)</option>
             </select>
+            {partyOption === otherInstitutionValue && (
+              <input
+                className="input mt-2"
+                placeholder="Type the institution name"
+                value={customParty}
+                onChange={(e) => setCustomParty(e.target.value)}
+              />
+            )}
           </label>
         </div>
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
