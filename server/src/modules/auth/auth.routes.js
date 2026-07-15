@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { users } from '../../utils/sampleData.js';
+import { renameUserEverywhere } from '../../utils/userRefs.js';
 import { authenticate, signUserToken } from '../../middleware/auth.js';
 
 export const authRouter = Router();
@@ -129,6 +130,7 @@ authRouter.patch('/profile', authenticate, (req, res) => {
   if (name !== undefined) {
     const value = String(name).trim();
     if (!value) return res.status(400).json({ message: 'Name cannot be empty.' });
+    renameUserEverywhere(user.name, value); // update all records that used the old name
     user.name = value;
     user.avatar = value.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   }

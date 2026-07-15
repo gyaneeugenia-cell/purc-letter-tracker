@@ -12,7 +12,7 @@ const incomingStages = [
 ];
 
 const outgoingStages = [
-  { status: 'DISPATCHED', label: 'Dispatched', tone: 'emerald' }
+  { status: 'DISPATCHED', label: 'Dispatched Letter Recorded', tone: 'emerald' }
 ];
 
 const toneClasses = {

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { departments, users } from '../../utils/sampleData.js';
+import { renameUserEverywhere } from '../../utils/userRefs.js';
 
 export const adminRouter = Router();
 const assignableRoles = ['NORMAL_USER', 'SYSTEM_ADMIN'];
@@ -44,6 +45,7 @@ adminRouter.patch('/users/:id', (req, res) => {
   if (name !== undefined) {
     const value = String(name).trim();
     if (!value) return res.status(400).json({ message: 'Name cannot be empty' });
+    renameUserEverywhere(target.name, value); // update all records that used the old name
     target.name = value;
     target.avatar = value.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   }
