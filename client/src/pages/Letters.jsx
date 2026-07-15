@@ -201,7 +201,7 @@ export default function Letters({ type }) {
           )}
         </div>
       </section>
-      <Modal open={open} title={type === 'INCOMING' ? 'Register Received Letter' : 'Register Outgoing Letter'} onClose={() => { setOpen(false); setFormError(''); }}>
+      <Modal open={open} title={type === 'INCOMING' ? 'Register Received Letter' : 'Register Dispatched Letter'} onClose={() => { setOpen(false); setFormError(''); }}>
         <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
           {formError && (
             <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed md:col-span-2">

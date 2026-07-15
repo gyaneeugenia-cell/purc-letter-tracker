@@ -102,7 +102,7 @@ export default function Analytics() {
         <p className="font-semibold text-purcBlue dark:text-blue-300">Total Letters Received: {received}</p>
         <p className="mt-1 font-semibold text-purcRed dark:text-red-300">Letters Dispatched: {dispatched}</p>
         {awaiting > 0 && (
-          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Outgoing letters at ES: {awaiting}</p>
+          <p className="mt-1 font-semibold text-amber-600 dark:text-amber-300">Dispatched letters at ES: {awaiting}</p>
         )}
       </div>
     );

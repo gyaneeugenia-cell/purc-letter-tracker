@@ -240,6 +240,21 @@ export default function LetterDetails() {
   if (!letter) return <Skeleton className="h-[600px]" />;
 
   const workflowOptions = letter.type === 'INCOMING' ? incomingStatusOptions : outgoingStatusOptions;
+
+  // A precise, readable date like "Apr 4, 2026, 09:15 AM".
+  const formatTimelineDate = (at) => new Date(at).toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+  });
+  // Turn each tracking event into a full sentence that includes the exact time.
+  function timelineHeadline(item) {
+    const text = `${item.title || ''} ${item.note || ''}`.toLowerCase();
+    const when = formatTimelineDate(item.at);
+    if (text.includes('record created') || text.includes('registered')) {
+      const typeWord = letter.type === 'INCOMING' ? 'Received' : 'Dispatched';
+      return `${typeWord} letter recorded at ${when}`;
+    }
+    return `${item.title} at ${when}`;
+  }
   const dispatchDestination = dispatchDestinationForLetter({ ...letter, routeDepartment });
   const summaryFields = letter.type === 'OUTGOING'
     ? [
@@ -299,7 +314,7 @@ export default function LetterDetails() {
         <section className="space-y-6">
           <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Activity timeline</h2>
+              <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Tracking timeline</h2>
               <button className="secondary-button" onClick={downloadSummary}><Download size={16} /> Download summary</button>
             </div>
             <div className="mt-5 space-y-0">
@@ -310,8 +325,8 @@ export default function LetterDetails() {
                     {index < arr.length - 1 && <span className="mt-1 w-px flex-1 bg-slate-200 dark:bg-white/10" />}
                   </div>
                   <div className="min-w-0 pb-1">
-                    <p className="font-bold text-slate-800 dark:text-slate-100">{item.title}</p>
-                    <p className="mt-0.5 text-xs font-medium text-slate-400">{item.actor} · {item.department} · {new Date(item.at).toLocaleString()}</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-100">{timelineHeadline(item)}</p>
+                    <p className="mt-0.5 text-xs font-medium text-slate-400">{item.actor} · {item.department}</p>
                     <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{item.note}</p>
                   </div>
                 </div>
