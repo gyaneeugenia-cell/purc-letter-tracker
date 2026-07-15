@@ -809,7 +809,7 @@ function dispatchMovement(letter) {
   return {
     id: `mv-${letter.id}-dispatched`,
     letterId: letter.id,
-    title: letter.type === 'INCOMING' ? `Dispatched to ${letter.routeDepartment}` : 'Outgoing letter dispatched',
+    title: letter.type === 'INCOMING' ? `Dispatched to ${letter.routeDepartment}` : `Dispatched to ${letter.recipient}`,
     actor: letter.createdBy,
     department: letter.type === 'INCOMING' ? letter.routeDepartment : letter.currentDepartment,
     status: 'CURRENT',
@@ -830,7 +830,7 @@ export const notifications = [];
 export const auditLogs = letters
   .map((letter) => ({
     id: `audit-${letter.id}`,
-    action: 'LETTER_CREATED',
+    action: letter.type === 'INCOMING' ? 'RECEIVED_LETTER_CREATED' : 'DISPATCHED_LETTER_CREATED',
     actor: letter.createdBy,
     entity: letter.trackingNumber,
     severity: 'INFO',

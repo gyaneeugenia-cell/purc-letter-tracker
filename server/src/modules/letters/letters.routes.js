@@ -244,7 +244,7 @@ lettersRouter.post('/', (req, res) => {
   // Status is fixed by type (RECEIVED / DISPATCHED) — no inference override.
   letters.unshift(letter);
   recordMovement(letter, req, 'Letter registered', 'Record created', actorDepartment(req));
-  recordAudit(req, 'LETTER_CREATED', letter);
+  recordAudit(req, letter.type === 'INCOMING' ? 'RECEIVED_LETTER_CREATED' : 'DISPATCHED_LETTER_CREATED', letter);
   res.status(201).json({ data: letter });
 });
 
@@ -339,8 +339,8 @@ lettersRouter.post('/:id/route', (req, res) => {
     recordMovement(
       letter,
       req,
-      letter.type === 'INCOMING' ? `Dispatched to ${letter.currentDepartment}` : 'Outgoing letter dispatched',
-      req.body.note || (letter.type === 'INCOMING' ? 'Dispatched from ES office for department action.' : 'Outgoing letter dispatched from ES office.'),
+      letter.type === 'INCOMING' ? `Dispatched to ${letter.currentDepartment}` : `Dispatched to ${letter.recipient || letter.currentDepartment}`,
+      req.body.note || (letter.type === 'INCOMING' ? 'Dispatched from ES office for department action.' : `Dispatched from PURC to ${letter.recipient || 'the recipient'}.`),
       letter.currentDepartment
     );
   }
@@ -377,6 +377,6 @@ lettersRouter.delete('/:id', (req, res) => {
   for (let i = movements.length - 1; i >= 0; i -= 1) {
     if (movements[i].letterId === deleted.id) movements.splice(i, 1);
   }
-  recordAudit(req, 'LETTER_DELETED', deleted);
+  recordAudit(req, deleted.type === 'INCOMING' ? 'RECEIVED_LETTER_DELETED' : 'DISPATCHED_LETTER_DELETED', deleted);
   res.json({ data: deleted });
 });

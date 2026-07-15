@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { http } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 
 const auditColumns = [
@@ -14,7 +13,6 @@ const auditColumns = [
 ];
 
 export default function AuditLogs() {
-  const { timeRange } = usePersistentPeriod();
   const { user } = useAuth();
   const isAdmin = user?.role === 'SYSTEM_ADMIN';
   const [logs, setLogs] = useState([]);
@@ -56,14 +54,12 @@ export default function AuditLogs() {
 
   return (
     <div className="space-y-6">
-      <PeriodLabel timeRange={timeRange} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="inline-flex rounded-full bg-blue-50 px-4 py-2 text-sm font-extrabold text-purcBlue shadow-sm ring-1 ring-blue-100 dark:bg-blue-900/50 dark:text-blue-100 dark:ring-blue-800/70">
           Audit Logs
         </h2>
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-semibold text-slate-500 dark:text-slate-300">{logs.length} record(s)</span>
-          <ExportButtons title="Audit Activity Log" periodLabel={formatRangeLabel(timeRange)} columns={auditColumns} rows={logs} size="sm" />
+          <ExportButtons title="Audit Activity Log" periodLabel="All Records" columns={auditColumns} rows={logs} size="sm" />
           {isAdmin && (
             <button
               onClick={clearAll}

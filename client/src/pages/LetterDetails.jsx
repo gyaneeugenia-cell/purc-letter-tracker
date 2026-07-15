@@ -253,7 +253,12 @@ export default function LetterDetails() {
       const typeWord = letter.type === 'INCOMING' ? 'Received' : 'Dispatched';
       return `${typeWord} letter recorded at ${when}`;
     }
-    return `${item.title} at ${when}`;
+    // Clean up any older "Outgoing letter dispatched" wording still in the data.
+    let title = item.title || '';
+    if (/outgoing letter dispatched/i.test(title)) {
+      title = letter.recipient ? `Dispatched to ${letter.recipient}` : 'Letter dispatched';
+    }
+    return `${title} at ${when}`;
   }
   const dispatchDestination = dispatchDestinationForLetter({ ...letter, routeDepartment });
   const summaryFields = letter.type === 'OUTGOING'
@@ -327,7 +332,9 @@ export default function LetterDetails() {
                   <div className="min-w-0 pb-1">
                     <p className="font-bold text-slate-800 dark:text-slate-100">{timelineHeadline(item)}</p>
                     <p className="mt-0.5 text-xs font-medium text-slate-400">{item.actor} · {item.department}</p>
-                    <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{item.note}</p>
+                    {item.note && item.note.toLowerCase() !== 'record created' && (
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{item.note}</p>
+                    )}
                   </div>
                 </div>
               ))}

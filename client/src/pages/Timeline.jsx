@@ -101,9 +101,6 @@ export default function Timeline() {
                   <div>
                     <Link to={`/letters/${letter.id}`} className="font-black text-cobalt hover:underline dark:text-blue-300">{letter.trackingNumber}</Link>
                     <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-slate-100">{letter.subject}</p>
-                    <p className="mt-1 text-xs font-semibold text-slate-500 dark:text-slate-300">
-                      Last activity: {displayDateTime(letter.updatedAt || letter.dispatchedAt || letter.receivedAt || letter.createdAt)}
-                    </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusChip status={letter.status} />
