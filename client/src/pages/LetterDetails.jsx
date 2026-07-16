@@ -74,6 +74,8 @@ export default function LetterDetails() {
   const location = useLocation();
   const navigate = useNavigate();
   const [letter, setLetter] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
   const [routeOpen, setRouteOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -219,22 +221,25 @@ export default function LetterDetails() {
     navigate(letter.type === 'OUTGOING' ? '/outgoing' : '/incoming');
   }
 
-  function downloadSummary() {
-    const body = [
-      `Reference Number: ${letter.trackingNumber}`,
-      `Registry Number: ${formatValue(letter.registryNumber)}`,
-      `Subject: ${letter.subject}`,
-      `Status: ${statusLabels[letter.status] || letter.status}`,
-      `Current Letter Destination: ${displayDestination(letter)}`,
-      '',
-      letter.remarks || 'No Remarks'
-    ].join('\n');
-    const url = URL.createObjectURL(new Blob([body], { type: 'text/plain' }));
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${letter.trackingNumber}.txt`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+  // Downloads a real PDF built by the server, so it opens on any laptop or phone.
+  async function downloadSummary() {
+    setSummaryError('');
+    setSummaryLoading(true);
+    try {
+      const { data } = await http.get(`/letters/${letter.id}/summary.pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }));
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = `${String(letter.trackingNumber || 'letter').replace(/[^A-Za-z0-9._-]+/g, '-')}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setSummaryError('Could not download the summary. Please try again.');
+    } finally {
+      setSummaryLoading(false);
+    }
   }
 
   if (!letter) return <Skeleton className="h-[600px]" />;
@@ -320,8 +325,13 @@ export default function LetterDetails() {
           <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-slate-900/60">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">Tracking timeline</h2>
-              <button className="secondary-button" onClick={downloadSummary}><Download size={16} /> Download summary</button>
+              <button className="secondary-button disabled:opacity-60" onClick={downloadSummary} disabled={summaryLoading}>
+                <Download size={16} /> {summaryLoading ? 'Preparing PDF…' : 'Download summary (PDF)'}
+              </button>
             </div>
+            {summaryError && (
+              <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed">{summaryError}</p>
+            )}
             <div className="mt-5 space-y-0">
               {(letter.timeline || []).map((item, index, arr) => (
                 <div key={item.id} className="relative flex gap-4 pb-6 last:pb-0">

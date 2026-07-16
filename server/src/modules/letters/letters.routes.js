@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import PDFDocument from 'pdfkit';
 import { v4 as uuid } from 'uuid';
 import { letters, movements, auditLogs } from '../../utils/sampleData.js';
 import { canonicalizeInstitution } from '../../utils/institutions.js';
@@ -269,6 +270,100 @@ lettersRouter.get('/:id', (req, res) => {
   const letter = findLetter(req.params.id);
   if (!letter) return res.status(404).json({ message: 'Letter not found' });
   res.json({ data: publicLetter(letter) });
+});
+
+// A real PDF summary of one letter. PDFs open on any laptop or phone without
+// needing a special app, unlike a plain text file.
+lettersRouter.get('/:id/summary.pdf', (req, res) => {
+  const record = findLetter(req.params.id);
+  if (!record) return res.status(404).json({ message: 'Letter not found' });
+  const letter = publicLetter(record);
+
+  const BLUE = '#465BA8';
+  const RED = '#E31E2F';
+  const INK = '#0F172A';
+  const MUTED = '#64748B';
+  const safeName = String(letter.trackingNumber || 'letter').replace(/[^A-Za-z0-9._-]+/g, '-');
+  const dateText = (value) => (value
+    ? new Date(value).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : 'Not recorded');
+  const isIncoming = letter.type === 'INCOMING';
+
+  const doc = new PDFDocument({ size: 'A4', margin: 50, info: { Title: `${letter.trackingNumber} summary` } });
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${safeName}.pdf"`);
+  doc.pipe(res);
+
+  // Header
+  doc.fillColor(RED).fontSize(12).font('Helvetica-Bold').text('PUBLIC UTILITIES', { continued: true })
+    .fillColor(BLUE).text(' REGULATORY COMMISSION');
+  doc.moveDown(0.2);
+  doc.fillColor(INK).fontSize(18).font('Helvetica-Bold').text('Letter Summary');
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica')
+    .text(`Generated ${dateText(new Date())}  |  Letter Tracking Suite`);
+  doc.moveTo(50, doc.y + 8).lineTo(545, doc.y + 8).strokeColor(BLUE).lineWidth(2).stroke();
+  doc.moveDown(1.2);
+
+  // Subject
+  doc.fillColor(INK).fontSize(14).font('Helvetica-Bold').text(letter.subject || 'No subject');
+  doc.moveDown(0.8);
+
+  // Detail rows
+  const rows = [
+    ['Reference number', letter.trackingNumber],
+    ['Registry number', letter.registryNumber],
+    ['Type', isIncoming ? 'Received' : 'Dispatched'],
+    ['Status', workflowLabels[letter.status] || letter.status],
+    ['Priority', ['URGENT', 'HIGH'].includes(String(letter.priority).toUpperCase()) ? 'Urgent' : 'Normal'],
+    [isIncoming ? 'Institution letter came from' : 'Recipient institution',
+      isIncoming ? letter.senderOrganization : letter.recipient],
+    [isIncoming ? 'From whom sent' : 'Initiating directorate',
+      isIncoming ? letter.sender : letter.routeDepartment],
+    ['Date of letter', letter.letterDate ? dateText(letter.letterDate).split(',')[0] : 'Not recorded'],
+    [isIncoming ? 'Received at' : 'Dispatched at', dateText(letter.receivedAt || letter.dispatchedAt || letter.createdAt)],
+    ['Recorded by', letter.createdBy]
+  ];
+
+  rows.forEach(([label, value]) => {
+    const y = doc.y;
+    doc.fillColor(MUTED).fontSize(9).font('Helvetica-Bold').text(String(label).toUpperCase(), 50, y, { width: 170 });
+    doc.fillColor(INK).fontSize(11).font('Helvetica').text(String(value ?? '-') || '-', 225, y, { width: 320 });
+    doc.moveDown(0.55);
+  });
+
+  // Remarks
+  doc.moveDown(0.6);
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica-Bold').text('REMARKS', 50);
+  doc.fillColor(INK).fontSize(11).font('Helvetica').text(letter.remarks || 'No remarks', 50, doc.y + 2, { width: 495 });
+
+  // Tracking timeline
+  const timeline = letter.timeline || [];
+  if (timeline.length) {
+    doc.moveDown(1.2);
+    doc.fillColor(BLUE).fontSize(12).font('Helvetica-Bold').text('Tracking timeline', 50);
+    doc.moveDown(0.4);
+    timeline.forEach((item) => {
+      const text = `${item.title || ''} ${item.note || ''}`.toLowerCase();
+      let headline;
+      if (text.includes('record created') || text.includes('registered')) {
+        headline = `${isIncoming ? 'Received' : 'Dispatched'} letter recorded at ${dateText(item.at)}`;
+      } else {
+        const title = /outgoing letter dispatched/i.test(item.title || '')
+          ? (letter.recipient ? `Dispatched to ${letter.recipient}` : 'Letter dispatched')
+          : item.title;
+        headline = `${title} at ${dateText(item.at)}`;
+      }
+      doc.fillColor(INK).fontSize(10).font('Helvetica-Bold').text(`- ${headline}`, 50, doc.y, { width: 495 });
+      const by = [item.actor, item.department].filter(Boolean).join(' - ');
+      if (by) doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(`   ${by}`, 50, doc.y, { width: 495 });
+      doc.moveDown(0.4);
+    });
+  }
+
+  doc.fillColor(MUTED).fontSize(8).font('Helvetica')
+    .text('PURC Letter Tracking Suite - Confidential', 50, 790, { width: 495, align: 'center' });
+
+  doc.end();
 });
 
 lettersRouter.patch('/:id', (req, res) => {
