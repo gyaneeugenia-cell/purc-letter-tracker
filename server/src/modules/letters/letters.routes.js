@@ -355,7 +355,7 @@ lettersRouter.get('/:id/summary.pdf', (req, res) => {
       const text = `${item.title || ''} ${item.note || ''}`.toLowerCase();
       let headline;
       if (text.includes('record created') || text.includes('registered')) {
-        headline = `${isIncoming ? 'Received' : 'Dispatched'} letter recorded at ${dateText(item.at)}`;
+        headline = `${isIncoming ? 'Received' : 'Dispatched'} letter recorded on ${dateText(item.at)}`;
       } else {
         const title = /outgoing letter dispatched/i.test(item.title || '')
           ? (letter.recipient ? `Dispatched to ${letter.recipient}` : 'Letter dispatched')

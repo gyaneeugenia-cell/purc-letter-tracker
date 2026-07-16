@@ -279,7 +279,7 @@ export default function Letters({ type }) {
             Subject
             <input
               className="input"
-              placeholder="Describe the letter in words (no numbers)"
+              placeholder="Type the subject of the letter"
               value={form.subject}
               onChange={(e) => setForm({ ...form, subject: wordsOnly(e.target.value) })}
               required

@@ -130,10 +130,13 @@ function isDispatched(letter) {
   return letter.status === 'DISPATCHED' || letter.type === 'OUTGOING';
 }
 
+// A dispatched letter is initiated by exactly ONE directorate, so attribute it
+// to the initiating directorate only (falling back to the sender when unset).
+// Matching on either field would count the same letter under two directorates.
 function outgoingFromDepartment(letter, department) {
   if (letter.type !== 'OUTGOING') return false;
-  return matchesDepartment(letter.routeDepartment, department)
-    || matchesDepartment(letter.sender, department);
+  const initiator = normalizeDepartment(letter.routeDepartment) ? letter.routeDepartment : letter.sender;
+  return matchesDepartment(initiator, department);
 }
 
 // Every received letter is addressed to the Executive Secretariat, which then

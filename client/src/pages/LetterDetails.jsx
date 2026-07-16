@@ -256,7 +256,7 @@ export default function LetterDetails() {
     const when = formatTimelineDate(item.at);
     if (text.includes('record created') || text.includes('registered')) {
       const typeWord = letter.type === 'INCOMING' ? 'Received' : 'Dispatched';
-      return `${typeWord} letter recorded at ${when}`;
+      return `${typeWord} letter recorded on ${when}`;
     }
     // Clean up any older "Outgoing letter dispatched" wording still in the data.
     let title = item.title || '';
@@ -305,9 +305,10 @@ export default function LetterDetails() {
             </span>
             <h1 className="mt-3 max-w-4xl text-2xl font-black leading-tight text-ink dark:text-white">{letter.subject}</h1>
             <div className="mt-4 flex flex-wrap items-center gap-2">
+              {/* The status already reads "Received"/"Dispatched", so a separate
+                  type chip would just repeat it. */}
               <StatusChip status={letter.status} />
               <PriorityBadge priority={letter.priority} />
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-white/10 dark:text-slate-200">{displayType(letter)}</span>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
