@@ -9,8 +9,9 @@ import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
 import { Modal } from '../components/ui/Modal.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
-import { purcDepartments } from '../constants/departments.js';
-import { institutionGroups, institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
+import { executiveSecretariat, purcDepartments } from '../constants/departments.js';
+import { institutionSearchTerms, otherInstitutionValue, selectedInstitution } from '../constants/institutions.js';
+import { useInstitutionGroups } from '../hooks/useInstitutionGroups.js';
 
 function emptyForm(type) {
   return {
@@ -39,6 +40,18 @@ function numericOnly(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
+// A subject describes the letter, so it must be real wording — not a number,
+// a reference code, or a handful of symbols.
+export function validateSubject(value) {
+  const subject = String(value || '').trim();
+  if (!subject) return 'Enter the subject of the letter.';
+  if (!/[A-Za-z]/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers.';
+  const letters = (subject.match(/[A-Za-z]/g) || []).length;
+  if (letters < 3) return 'The subject is too short. Describe the letter in words.';
+  if (/^[\d\s\W]+$/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers or symbols.';
+  return '';
+}
+
 export default function Letters({ type }) {
   const { timeRange } = usePersistentPeriod();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,6 +64,8 @@ export default function Letters({ type }) {
   const [form, setForm] = useState(() => emptyForm(type));
   const [statusMessage, setStatusMessage] = useState('');
   const [formError, setFormError] = useState('');
+  // Includes any institution previously typed in via "Other".
+  const institutionGroups = useInstitutionGroups(letters.length);
 
   async function loadLetters() {
     setLoading(true);
@@ -83,6 +98,12 @@ export default function Letters({ type }) {
     const recipient = type === 'OUTGOING'
       ? selectedInstitution(form.recipientOption, form.customRecipient)
       : form.recipient.trim();
+
+    const subjectError = validateSubject(form.subject);
+    if (subjectError) {
+      setFormError(subjectError);
+      return;
+    }
     if (type === 'INCOMING' && !senderOrganization) {
       setFormError('Select the institution the letter came from.');
       return;
@@ -93,7 +114,10 @@ export default function Letters({ type }) {
     }
     const payload = {
       ...form,
+      subject: form.subject.trim(),
       senderOrganization,
+      // Received letters are always addressed to the Executive Secretariat.
+      routeDepartment: type === 'INCOMING' ? executiveSecretariat : form.routeDepartment,
       sender: type === 'OUTGOING' ? form.routeDepartment : form.sender,
       recipient,
       attachments: Number(form.attachments) > 0 ? 1 : 0
@@ -270,12 +294,17 @@ export default function Letters({ type }) {
               <option>NORMAL</option><option>URGENT</option>
             </select>
           </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            {type === 'INCOMING' ? 'Directorate to route to' : 'Directorate responsible for letter'}
-            <select className="input" value={form.routeDepartment} onChange={(e) => setForm({ ...form, routeDepartment: e.target.value })}>
-              {purcDepartments.map((department) => <option key={department}>{department}</option>)}
-            </select>
-          </label>
+          {/* Received letters are always addressed to the Executive Secretariat,
+              which assigns them afterwards — so the recorder does not choose a
+              directorate here. Dispatched letters name the directorate they came from. */}
+          {type === 'OUTGOING' && (
+            <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+              Initiating directorate
+              <select className="input" value={form.routeDepartment} onChange={(e) => setForm({ ...form, routeDepartment: e.target.value })}>
+                {purcDepartments.map((department) => <option key={department}>{department}</option>)}
+              </select>
+            </label>
+          )}
           <textarea className="input md:col-span-2" rows="3" placeholder="Remarks" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} />
           <button className="primary-button md:col-span-2">Create record</button>
         </form>

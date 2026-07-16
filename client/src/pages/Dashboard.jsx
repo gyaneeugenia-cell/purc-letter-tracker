@@ -152,7 +152,7 @@ export default function Dashboard() {
           <label className="grid gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
             Status
             <select className="input" value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="">All statuses</option>
+              <option value="">All</option>
               {statusOptionsForType.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>

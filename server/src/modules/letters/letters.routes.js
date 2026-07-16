@@ -19,6 +19,17 @@ const allowedOutgoingStatuses = ['DISPATCHED'];
 const allowedLetterTypes = ['INCOMING', 'OUTGOING'];
 const allowedPriorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
+// A subject describes the letter, so it must be real wording — not a number,
+// a reference code, or a handful of symbols.
+function validateSubject(value) {
+  const subject = String(value || '').trim();
+  if (!subject) return 'Subject is required';
+  if (!/[A-Za-z]/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers.';
+  if ((subject.match(/[A-Za-z]/g) || []).length < 3) return 'The subject is too short. Describe the letter in words.';
+  if (/^[\d\s\W]+$/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers or symbols.';
+  return '';
+}
+
 function findLetter(id) {
   return letters.find((item) => item.id === id || item.trackingNumber === id);
 }
@@ -208,7 +219,8 @@ lettersRouter.post('/', (req, res) => {
   if (letterNumber.error) return res.status(400).json({ message: letterNumber.error });
   if (letterDate.error || !letterDate.value) return res.status(400).json({ message: letterDate.error || 'Date is required' });
   if (dueAt.error) return res.status(400).json({ message: dueAt.error });
-  if (!subject) return res.status(400).json({ message: 'Subject is required' });
+  const subjectError = validateSubject(subject);
+  if (subjectError) return res.status(400).json({ message: subjectError });
   if (!allowedPriorities.includes(priority)) return res.status(400).json({ message: 'Priority is invalid' });
   if (type === 'INCOMING' && !senderOrganization) return res.status(400).json({ message: 'Institution letter came from is required' });
   if (type === 'OUTGOING' && !recipient) return res.status(400).json({ message: 'Recipient institution is required' });
@@ -236,7 +248,12 @@ lettersRouter.post('/', (req, res) => {
     senderOrganization,
     recipient,
     sender: type === 'OUTGOING' ? req.body.sender || req.body.routeDepartment || actorDepartment(req) : req.body.sender,
-    routeDepartment: req.body.routeDepartment || req.body.currentDepartment || 'Executive Secretary',
+    // Every received letter is addressed to the Executive Secretariat, which
+    // assigns it to a directorate afterwards. Dispatched letters keep the
+    // initiating directorate.
+    routeDepartment: type === 'INCOMING'
+      ? 'Executive Secretary'
+      : (req.body.routeDepartment || req.body.currentDepartment || 'Executive Secretary'),
     currentDepartment: esOfficeDestination,
     createdBy: actorName(req),
     createdByDepartment: actorDepartment(req)

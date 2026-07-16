@@ -35,15 +35,29 @@ export const users = [
   }
 ];
 
+// The Executive Secretariat (single point of entry/exit) plus the eight directorates.
 export const departments = [
   { id: 'd-executive-secretary', code: 'ES', name: 'Executive Secretary', head: '', status: 'ACTIVE' },
   { id: 'd-reg-economics', code: 'RED', name: 'Regulatory Economics', head: '', status: 'ACTIVE' },
+  { id: 'd-legal', code: 'LFH', name: 'Legal & Formal Hearing', head: '', status: 'ACTIVE' },
+  { id: 'd-regional-operations', code: 'ROCS', name: 'Regional Operations and Consumer Services', head: '', status: 'ACTIVE' },
+  { id: 'd-finance', code: 'FP', name: 'Finance & Procurement', head: '', status: 'ACTIVE' },
   { id: 'd-energy-monitoring', code: 'ESPM', name: 'Energy Services and Performance Monitoring', head: '', status: 'ACTIVE' },
   { id: 'd-water-monitoring', code: 'WSPM', name: 'Water Services and Performance Monitoring', head: '', status: 'ACTIVE' },
-  { id: 'd-regional-operations', code: 'ROD', name: 'Regional Operations', head: '', status: 'ACTIVE' },
-  { id: 'd-legal', code: 'LS', name: 'Legal Services', head: '', status: 'ACTIVE' },
-  { id: 'd-finance', code: 'FA', name: 'Finance and Administration', head: '', status: 'ACTIVE' }
+  { id: 'd-research-corporate', code: 'RCA', name: 'Research and Corporate Affairs', head: '', status: 'ACTIVE' },
+  { id: 'd-hr-admin', code: 'HRA', name: 'Human Resources & Administration', head: '', status: 'ACTIVE' }
 ];
+
+// A pristine copy: the directorate list is code-owned, so it always wins over
+// whatever an older database happens to hold.
+export const CANONICAL_DEPARTMENTS = departments.map((d) => ({ ...d }));
+
+// Old directorate names that must be upgraded to the correct current names.
+export const DEPARTMENT_RENAMES = {
+  'Legal Services': 'Legal & Formal Hearing',
+  'Regional Operations': 'Regional Operations and Consumer Services',
+  'Finance and Administration': 'Finance & Procurement'
+};
 
 export const letters = [
   {

@@ -14,7 +14,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 import bcrypt from 'bcryptjs';
 import { pool } from './db.js';
-import { letters, users, departments, movements, auditLogs, notifications } from '../utils/sampleData.js';
+import { letters, users, departments, movements, auditLogs, notifications, DEPARTMENT_RENAMES, CANONICAL_DEPARTMENTS } from '../utils/sampleData.js';
 
 export const DEFAULT_SECURITY_QUESTION = 'In which city is PURC headquartered?';
 const DEFAULT_SECURITY_ANSWER = 'accra';
@@ -198,6 +198,19 @@ export async function initPersistence() {
     letters.forEach((l) => {
       l.status = l.type === 'OUTGOING' ? 'DISPATCHED' : 'RECEIVED';
     });
+
+    // The directorate list lives in code, so restore the canonical set.
+    replaceArray(departments, CANONICAL_DEPARTMENTS.map((d) => ({ ...d })));
+
+    // Upgrade any old directorate names to the commission's current names.
+    const rename = (value) => DEPARTMENT_RENAMES[String(value || '').trim()] || value;
+    letters.forEach((l) => {
+      l.routeDepartment = rename(l.routeDepartment);
+      l.currentDepartment = rename(l.currentDepartment);
+      l.createdByDepartment = rename(l.createdByDepartment);
+    });
+    movements.forEach((m) => { m.department = rename(m.department); });
+    users.forEach((u) => { u.department = rename(u.department); });
 
     // Ensure every account can self-reset its password: give any account that
     // has no security question a default one (answer: "Accra"). New sign-ups

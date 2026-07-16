@@ -56,6 +56,12 @@ function normalize(value) {
   return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
 }
 
+// Every institution name that ships with the app (used to work out which names
+// were typed in by a user via "Other").
+export function knownInstitutionNames() {
+  return institutions.map((institution) => institution.name);
+}
+
 export function canonicalizeInstitution(value) {
   const trimmed = String(value || '').replace(/\s+/g, ' ').trim();
   const normalized = normalize(trimmed);

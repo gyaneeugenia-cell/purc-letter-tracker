@@ -7,7 +7,8 @@ import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../component
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { purcDepartments } from '../constants/departments.js';
-import { institutionGroups, otherInstitutionValue } from '../constants/institutions.js';
+import { otherInstitutionValue } from '../constants/institutions.js';
+import { useInstitutionGroups } from '../hooks/useInstitutionGroups.js';
 
 export default function Search() {
   const { timeRange } = usePersistentPeriod();
@@ -18,17 +19,14 @@ export default function Search() {
   const [department, setDepartment] = useState(searchParams.get('department') || '');
   const [partyOption, setPartyOption] = useState(searchParams.get('party') || '');
   const [customParty, setCustomParty] = useState('');
+  const institutionGroups = useInstitutionGroups();
   // "Other" lets you type any institution that is not in the list.
   const party = partyOption === otherInstitutionValue ? customParty.trim() : partyOption;
   const [rows, setRows] = useState([]);
   const [breakdown, setBreakdown] = useState({ received: 0, dispatched: 0 });
 
   // Directorate label adapts to the selected letter type.
-  const directorateLabel = type === 'INCOMING'
-    ? 'Recipient directorate'
-    : type === 'OUTGOING'
-      ? 'Responsible PURC directorate'
-      : 'Directorate';
+  const directorateLabel = type === 'OUTGOING' ? 'Initiating directorate' : 'Directorate';
   // Institution label adapts to the selected letter type.
   const institutionLabel = type === 'INCOMING'
     ? 'Sender institution'
