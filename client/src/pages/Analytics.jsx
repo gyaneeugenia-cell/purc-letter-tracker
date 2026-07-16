@@ -62,11 +62,15 @@ export default function Analytics() {
   const volumeAxisTick = { ...axisTick, fontSize: groupBy === 'daily' ? 10 : 12 };
 
   // Department chart dimensions
-  const maxDepartmentWorkload = Math.max(0, ...data.departments.map((d) => d.workload));
+  // A letter arriving at the commission is addressed to the Executive Secretariat
+  // and names no directorate, so received letters cannot honestly be attributed
+  // to one. The only directorate actually recorded on a letter is the directorate
+  // that INITIATED a dispatched letter — so that is what this chart measures.
+  const maxDepartmentWorkload = Math.max(0, ...data.departments.map((d) => d.dispatched));
   const yUpper = Math.max(4, maxDepartmentWorkload + 1);
   const yTicks = Array.from({ length: yUpper + 1 }, (_, i) => i);
   const busiestDepartment = maxDepartmentWorkload > 0
-    ? [...data.departments].sort((a, b) => b.workload - a.workload)[0]
+    ? [...data.departments].sort((a, b) => b.dispatched - a.dispatched)[0]
     : null;
 
   // Trend chart data — use dispatchedExternally from server buckets
@@ -131,21 +135,15 @@ export default function Analytics() {
         <p className="mb-3 text-base font-bold leading-tight text-ink dark:text-white">{d.name}</p>
         <div className="flex flex-wrap gap-2">
           <span className="rounded-lg px-3 py-1.5 text-xs font-bold text-white" style={{ backgroundColor: color }}>
-            Total: {d.workload}
-          </span>
-          <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
-            Holding: {d.received}
-          </span>
-          <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-            Initiated: {d.sent}
+            Dispatched: {d.dispatched}
           </span>
         </div>
         <p className="mt-3 text-xs font-medium text-slate-400">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Holding</span> = received letters currently with {d.code}
-          {d.code === 'ES' ? ' (arrived, not yet assigned to a directorate).' : ` after the Executive Secretariat assigned them.`}
+          Letters dispatched by the Commission that were initiated by {d.name}.
         </p>
         <p className="mt-1 text-xs font-medium text-slate-400">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Initiated</span> = dispatched letters that came from {d.code}.
+          Received letters are not counted here — they are addressed to the Executive
+          Secretariat and carry no directorate.
         </p>
       </div>
     );
@@ -168,9 +166,7 @@ export default function Analytics() {
   const deptExportColumns = [
     { header: 'Directorate Code', accessor: (d) => d.code },
     { header: 'Directorate', accessor: (d) => d.name },
-    { header: 'Total Letters', accessor: (d) => d.workload },
-    { header: 'Received from ES', accessor: (d) => d.received ?? 0 },
-    { header: 'Sent through ES', accessor: (d) => d.sent ?? 0 }
+    { header: 'Letters Dispatched', accessor: (d) => d.dispatched ?? 0 }
   ];
   const flowExportColumns = [
     { header: 'Period', accessor: (b) => b.tooltipLabel || b.month },
@@ -247,16 +243,17 @@ export default function Analytics() {
           <section className={`${panelClass} flex flex-col p-6`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-bold text-ink dark:text-white">Directorate Activity</h2>
+                <h2 className="text-base font-bold text-ink dark:text-white">Letters Dispatched by Initiating Directorate</h2>
                 <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                  Every letter reaches the Executive Secretariat first. This shows where letters
-                  currently sit, plus the directorate each dispatched letter came from.
+                  Incoming letters are addressed to the Executive Secretariat and name no
+                  directorate, so only dispatched letters carry one. This shows which
+                  directorate each dispatched letter came from.
                 </p>
               </div>
               <ChartExport
                 getNode={() => deptChartRef.current}
-                baseName="directorate-workload"
-                excel={{ title: 'Directorate Workload', periodLabel, columns: deptExportColumns, rows: data.departments }}
+                baseName="letters-dispatched-by-directorate"
+                excel={{ title: 'Letters Dispatched by Initiating Directorate', periodLabel, columns: deptExportColumns, rows: data.departments }}
               />
             </div>
             <div ref={deptChartRef} className="mt-5 flex-1" style={{ minHeight: 320 }}>
@@ -266,19 +263,19 @@ export default function Analytics() {
                   <XAxis dataKey="code" tickLine={false} axisLine={false} interval={0} height={38} tick={axisTick} />
                   <YAxis allowDecimals={false} domain={[0, yUpper]} ticks={yTicks} width={32} tickLine={false} axisLine={false} tick={axisTick} />
                   <Tooltip content={<DepartmentTooltip />} cursor={{ fill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(70,91,168,0.06)' }} />
-                  <Bar dataKey="workload" name="Total Letters" radius={[8, 8, 0, 0]} barSize={46}>
+                  <Bar dataKey="dispatched" name="Letters Dispatched" radius={[8, 8, 0, 0]} barSize={46}>
                     {data.departments.map((entry, index) => (
-                      <Cell key={entry.code} fill={entry.workload > 0 ? departmentColors[index % departmentColors.length] : (isDark ? '#334155' : '#E2E8F0')} />
+                      <Cell key={entry.code} fill={entry.dispatched > 0 ? departmentColors[index % departmentColors.length] : (isDark ? '#334155' : '#E2E8F0')} />
                     ))}
-                    <LabelList dataKey="workload" position="top" style={{ fill: isDark ? '#CBD5E1' : '#374151', fontSize: 12, fontWeight: 700 }} />
+                    <LabelList dataKey="dispatched" position="top" style={{ fill: isDark ? '#CBD5E1' : '#374151', fontSize: 12, fontWeight: 700 }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="mt-4 rounded-lg bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
               {busiestDepartment
-                ? <>Busiest directorate: <span className="font-bold text-ink dark:text-white">{busiestDepartment.name} ({busiestDepartment.workload} letters)</span></>
-                : 'No directorate activity recorded for this period.'}
+                ? <>Most letters dispatched: <span className="font-bold text-ink dark:text-white">{busiestDepartment.name} ({busiestDepartment.dispatched} letters)</span></>
+                : 'No letters were dispatched in this period.'}
             </div>
           </section>
 
