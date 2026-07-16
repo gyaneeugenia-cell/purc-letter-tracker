@@ -34,8 +34,14 @@ function displayDateTime(value) {
 }
 
 function eventTime(letter, status) {
-  if (status === 'ES_RECEIVED' || status === 'READY_FOR_SIGNATURE') return letter.receivedAt || letter.createdAt;
-  if (status === 'DISPATCHED_TO_DEPARTMENT' || status === 'DISPATCHED') return letter.dispatchedAt || letter.updatedAt;
+  // Every recorded letter has a time: fall back to when the record was created
+  // so a tracked letter never reads "Not recorded yet".
+  if (status === 'RECEIVED' || status === 'ES_RECEIVED' || status === 'READY_FOR_SIGNATURE') {
+    return letter.receivedAt || letter.createdAt;
+  }
+  if (status === 'DISPATCHED_TO_DEPARTMENT' || status === 'DISPATCHED') {
+    return letter.dispatchedAt || letter.updatedAt || letter.createdAt;
+  }
   return letter.updatedAt || letter.createdAt;
 }
 

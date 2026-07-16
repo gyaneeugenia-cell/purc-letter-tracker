@@ -40,15 +40,25 @@ function numericOnly(value) {
   return String(value || '').replace(/\D/g, '');
 }
 
-// A subject describes the letter, so it must be real wording — not a number,
-// a reference code, or a handful of symbols.
+// A letter's subject is wording, never a number — so digits are not accepted.
+export function wordsOnly(value) {
+  return String(value || '').replace(/[0-9]/g, '');
+}
+
 export function validateSubject(value) {
   const subject = String(value || '').trim();
   if (!subject) return 'Enter the subject of the letter.';
-  if (!/[A-Za-z]/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers.';
+  if (/[0-9]/.test(subject)) return 'The subject cannot contain numbers — describe the letter in words.';
   const letters = (subject.match(/[A-Za-z]/g) || []).length;
   if (letters < 3) return 'The subject is too short. Describe the letter in words.';
-  if (/^[\d\s\W]+$/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers or symbols.';
+  return '';
+}
+
+// An institution is a name, so it must contain real wording too.
+export function validateInstitutionName(value) {
+  const name = String(value || '').trim();
+  if (!name) return 'Enter the institution name.';
+  if ((name.match(/[A-Za-z]/g) || []).length < 2) return 'Enter a valid institution name in words.';
   return '';
 }
 
@@ -112,6 +122,22 @@ export default function Letters({ type }) {
       setFormError('Select the recipient institution.');
       return;
     }
+
+    // Remember only the institution names actually typed in under "Other".
+    const usedOther = type === 'INCOMING'
+      ? form.senderOrganizationOption === otherInstitutionValue
+      : form.recipientOption === otherInstitutionValue;
+    const typedInstitution = usedOther
+      ? (type === 'INCOMING' ? form.customSenderOrganization : form.customRecipient).trim()
+      : '';
+    if (usedOther) {
+      const institutionError = validateInstitutionName(typedInstitution);
+      if (institutionError) {
+        setFormError(institutionError);
+        return;
+      }
+    }
+
     const payload = {
       ...form,
       subject: form.subject.trim(),
@@ -120,6 +146,7 @@ export default function Letters({ type }) {
       routeDepartment: type === 'INCOMING' ? executiveSecretariat : form.routeDepartment,
       sender: type === 'OUTGOING' ? form.routeDepartment : form.sender,
       recipient,
+      customInstitution: typedInstitution || undefined,
       attachments: Number(form.attachments) > 0 ? 1 : 0
     };
     try {
@@ -248,7 +275,16 @@ export default function Letters({ type }) {
             No. of letter
             <input className="input" inputMode="numeric" pattern="[0-9]*" placeholder="No. of letter on the document" value={form.letterNumber} onChange={(e) => setForm({ ...form, letterNumber: numericOnly(e.target.value) })} />
           </label>
-          <input className="input md:col-span-2" placeholder="Subject" value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required />
+          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
+            Subject
+            <input
+              className="input"
+              placeholder="Describe the letter in words (no numbers)"
+              value={form.subject}
+              onChange={(e) => setForm({ ...form, subject: wordsOnly(e.target.value) })}
+              required
+            />
+          </label>
           {type === 'INCOMING' ? (
             <>
               <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">

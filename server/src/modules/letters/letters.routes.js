@@ -20,15 +20,20 @@ const allowedOutgoingStatuses = ['DISPATCHED'];
 const allowedLetterTypes = ['INCOMING', 'OUTGOING'];
 const allowedPriorities = ['LOW', 'NORMAL', 'HIGH', 'URGENT'];
 
-// A subject describes the letter, so it must be real wording — not a number,
-// a reference code, or a handful of symbols.
+// A letter's subject is wording, never a number — so digits are rejected.
 function validateSubject(value) {
   const subject = String(value || '').trim();
   if (!subject) return 'Subject is required';
-  if (!/[A-Za-z]/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers.';
+  if (/[0-9]/.test(subject)) return 'The subject cannot contain numbers — describe the letter in words.';
   if ((subject.match(/[A-Za-z]/g) || []).length < 3) return 'The subject is too short. Describe the letter in words.';
-  if (/^[\d\s\W]+$/.test(subject)) return 'The subject must describe the letter in words — it cannot be only numbers or symbols.';
   return '';
+}
+
+// Institution names typed in under "Other" must be real wording.
+function cleanCustomInstitution(value) {
+  const name = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!name) return '';
+  return (name.match(/[A-Za-z]/g) || []).length >= 2 ? name : '';
 }
 
 function findLetter(id) {
@@ -234,7 +239,9 @@ lettersRouter.post('/', (req, res) => {
     confidentiality: 'INTERNAL',
     attachments,
     receivedAt: type === 'INCOMING' ? new Date().toISOString() : null,
-    dispatchedAt: type === 'OUTGOING' ? null : undefined,
+    // A letter registered as dispatched IS dispatched at that moment, so record
+    // the time straight away (otherwise the timeline says "not recorded yet").
+    dispatchedAt: type === 'OUTGOING' ? new Date().toISOString() : undefined,
     createdAt: new Date().toISOString(),
     ...req.body,
     attachments,
@@ -256,6 +263,8 @@ lettersRouter.post('/', (req, res) => {
       ? 'Executive Secretary'
       : (req.body.routeDepartment || req.body.currentDepartment || 'Executive Secretary'),
     currentDepartment: esOfficeDestination,
+    // Only names typed in under "Other" are remembered for the dropdown.
+    customInstitution: cleanCustomInstitution(req.body.customInstitution),
     createdBy: actorName(req),
     createdByDepartment: actorDepartment(req)
   };

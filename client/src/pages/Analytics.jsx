@@ -134,17 +134,18 @@ export default function Analytics() {
             Total: {d.workload}
           </span>
           <span className="rounded-lg bg-purcBlue px-3 py-1.5 text-xs font-bold text-white">
-            Received: {d.received}
+            Holding: {d.received}
           </span>
           <span className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white">
-            Dispatched: {d.sent}
+            Initiated: {d.sent}
           </span>
         </div>
         <p className="mt-3 text-xs font-medium text-slate-400">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Received</span> = letters received by the Commission routed to {d.code}.
+          <span className="font-semibold text-slate-600 dark:text-slate-300">Holding</span> = received letters currently with {d.code}
+          {d.code === 'ES' ? ' (arrived, not yet assigned to a directorate).' : ` after the Executive Secretariat assigned them.`}
         </p>
         <p className="mt-1 text-xs font-medium text-slate-400">
-          <span className="font-semibold text-slate-600 dark:text-slate-300">Dispatched</span> = letters dispatched from {d.code} by the Commission.
+          <span className="font-semibold text-slate-600 dark:text-slate-300">Initiated</span> = dispatched letters that came from {d.code}.
         </p>
       </div>
     );
@@ -246,9 +247,10 @@ export default function Analytics() {
           <section className={`${panelClass} flex flex-col p-6`}>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h2 className="text-base font-bold text-ink dark:text-white">Directorate Workload</h2>
+                <h2 className="text-base font-bold text-ink dark:text-white">Directorate Activity</h2>
                 <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                  Total letters handled per directorate in the selected period.
+                  Every letter reaches the Executive Secretariat first. This shows where letters
+                  currently sit, plus the directorate each dispatched letter came from.
                 </p>
               </div>
               <ChartExport
@@ -275,8 +277,8 @@ export default function Analytics() {
             </div>
             <div className="mt-4 rounded-lg bg-slate-50 px-4 py-3 text-sm font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
               {busiestDepartment
-                ? <>Highest active load: <span className="font-bold text-ink dark:text-white">{busiestDepartment.name} ({busiestDepartment.workload} letters)</span></>
-                : 'No active directorate load recorded for this period.'}
+                ? <>Busiest directorate: <span className="font-bold text-ink dark:text-white">{busiestDepartment.name} ({busiestDepartment.workload} letters)</span></>
+                : 'No directorate activity recorded for this period.'}
             </div>
           </section>
 

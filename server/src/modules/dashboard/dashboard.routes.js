@@ -136,10 +136,15 @@ function outgoingFromDepartment(letter, department) {
     || matchesDepartment(letter.sender, department);
 }
 
-function incomingDispatchedToDepartment(letter, department) {
+// Every received letter is addressed to the Executive Secretariat, which then
+// assigns it onward. So a received letter belongs to exactly ONE directorate at
+// a time: whoever is currently holding it (the ES until it is assigned).
+// Attributing it to both ES and the assignee would double-count it.
+function incomingHeldByDepartment(letter, department) {
   if (letter.type !== 'INCOMING') return false;
-  return matchesDepartment(letter.routeDepartment, department)
-    || matchesDepartment(letter.currentDepartment, department);
+  const holder = letter.currentDepartment;
+  if (!normalizeDepartment(holder) || isEsOffice(holder)) return isExecutiveSecretary(department);
+  return matchesDepartment(holder, department);
 }
 
 function uniqueLetters(items) {
@@ -321,7 +326,7 @@ dashboardRouter.get('/summary', (req, res) => {
     remarkInsights: remarkInsights(enrichedPeriod),
     departments: departments.map((department) => {
       const sentLetters = periodLetters.filter((letter) => outgoingFromDepartment(letter, department));
-      const receivedLetters = periodLetters.filter((letter) => incomingDispatchedToDepartment(letter, department));
+      const receivedLetters = periodLetters.filter((letter) => incomingHeldByDepartment(letter, department));
       const dedicatedLetters = uniqueLetters([...sentLetters, ...receivedLetters]);
       return {
         code: department.code,

@@ -6,22 +6,21 @@ export const institutionsRouter = Router();
 
 const normalize = (value) => String(value || '').replace(/\s+/g, ' ').trim();
 
-// Institutions typed in via "Other" are stored on the letters themselves, so any
-// name that is not part of the built-in list is returned here. The register and
-// search dropdowns append these under "Previously used", which means a one-off
-// institution entered today is selectable from the list tomorrow.
+// Returns ONLY the institution names a user actually typed in under "Other".
+// Those are stored on the letter as `customInstitution`, so nothing else — no
+// people's names, no directorates, no internal offices — can leak into the list.
 institutionsRouter.get('/', (req, res) => {
   const builtIn = new Set(knownInstitutionNames().map((name) => name.toLowerCase()));
   const seen = new Map();
 
   letters.forEach((letter) => {
-    [letter.senderOrganization, letter.recipient].forEach((raw) => {
-      const name = normalize(raw);
-      if (!name) return;
-      const key = name.toLowerCase();
-      if (builtIn.has(key) || seen.has(key)) return;
-      seen.set(key, name);
-    });
+    const name = normalize(letter.customInstitution);
+    if (!name) return;
+    // Must be real wording, and not something already in the built-in list.
+    if ((name.match(/[A-Za-z]/g) || []).length < 2) return;
+    const key = name.toLowerCase();
+    if (builtIn.has(key) || seen.has(key)) return;
+    seen.set(key, name);
   });
 
   const custom = [...seen.values()].sort((a, b) => a.localeCompare(b));
