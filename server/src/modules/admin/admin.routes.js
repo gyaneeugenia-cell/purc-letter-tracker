@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { departments, users } from '../../utils/sampleData.js';
 import { renameUserEverywhere } from '../../utils/userRefs.js';
+import { DEFAULT_SECURITY_QUESTION } from '../../config/persistence.js';
 
 export const adminRouter = Router();
 const assignableRoles = ['NORMAL_USER', 'SYSTEM_ADMIN'];
@@ -82,6 +83,10 @@ adminRouter.post('/users', requireSystemAdmin, (req, res) => {
     role,
     department,
     title,
+    // Give the account a security question straight away so the person can use
+    // "Forgot password" immediately (answer: Accra) without waiting for a restart.
+    securityQuestion: DEFAULT_SECURITY_QUESTION,
+    securityAnswerHash: bcrypt.hashSync('accra', 10),
     avatar: name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase()
   };
   users.push(created);
