@@ -141,10 +141,6 @@ export default function Analytics() {
         <p className="mt-3 text-xs font-medium text-slate-400">
           Letters dispatched by the Commission that were initiated by {d.name}.
         </p>
-        <p className="mt-1 text-xs font-medium text-slate-400">
-          Received letters are not counted here — they are addressed to the Executive
-          Secretariat and carry no directorate.
-        </p>
       </div>
     );
   }
@@ -245,9 +241,7 @@ export default function Analytics() {
               <div>
                 <h2 className="text-base font-bold text-ink dark:text-white">Letters Dispatched by Initiating Directorate</h2>
                 <p className={`mt-1 text-xs font-medium ${mutedText}`}>
-                  Incoming letters are addressed to the Executive Secretariat and name no
-                  directorate, so only dispatched letters carry one. This shows which
-                  directorate each dispatched letter came from.
+                  This shows which directorate each dispatched letter came from.
                 </p>
               </div>
               <ChartExport

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Inbox, Plus, Search, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { http } from '../api/http.js';
-import { PeriodControls, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
+import { PeriodControls, formatRangeLabel, isAllTimeRange, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
 import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
@@ -108,7 +108,7 @@ export default function Dashboard() {
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">Letter Register</h2>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              Letters recorded within {rangeLabel.toLowerCase()}.
+              {isAllTimeRange(timeRange) ? 'Letters recorded to date' : `Letters recorded within ${rangeLabel.toLowerCase()}.`}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
