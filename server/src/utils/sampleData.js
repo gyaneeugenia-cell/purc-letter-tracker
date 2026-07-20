@@ -52,6 +52,14 @@ export const departments = [
 // whatever an older database happens to hold.
 export const CANONICAL_DEPARTMENTS = departments.map((d) => ({ ...d }));
 
+// Records created before a user was renamed still hold the old name. These are
+// applied on startup and are idempotent: once no old name remains, they do
+// nothing. Add a line here only for a rename that happened before the automatic
+// cascade existed.
+export const LEGACY_ACTOR_RENAMES = {
+  Ephraim: 'Eugenia'
+};
+
 // Old directorate names that must be upgraded to the correct current names.
 export const DEPARTMENT_RENAMES = {
   'Legal Services': 'Legal & Formal Hearing',
