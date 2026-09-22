@@ -114,12 +114,26 @@ function hasDispatchMovement(letter, department) {
   return movements.some((item) => item.letterId === letter.id && isDispatchMovement(item) && dispatchMovementKey(item) === target);
 }
 
+// Compliance is only tracked for dispatched letters that carry a deadline.
+// COMPLIANT  = the utility was marked as having complied (met the deadline).
+// OVERDUE    = the deadline has passed and no compliance was recorded (breached).
+// PENDING    = a deadline is set and still in the future.
+// null       = no deadline, so nothing to track.
+function complianceFor(letter) {
+  if (letter.type !== 'OUTGOING' || !letter.deadlineAt) return null;
+  if (letter.compliedAt) return 'COMPLIANT';
+  const end = new Date(letter.deadlineAt);
+  end.setHours(23, 59, 59, 999); // the utility has until the end of the deadline day
+  return Date.now() > end.getTime() ? 'OVERDUE' : 'PENDING';
+}
+
 function publicLetter(letter) {
   // Preserve the explicitly-stored status — only attach inference metadata as extra fields.
   // Never let intelligence override a status that was deliberately set via workflow or dispatch.
   const inference = inferLetterMovement(letter);
   return {
     ...letter,
+    complianceStatus: complianceFor(letter),
     // Keep letter.status as-is; expose inference results as separate fields only
     inferredStatus: inference.status,
     inferredAction: inference.inferredAction,
@@ -205,6 +219,7 @@ lettersRouter.post('/', (req, res) => {
   const letterNumber = normalizeOptionalNumericField(req.body.letterNumber, 'No. of letter');
   const letterDate = normalizeOptionalDate(req.body.letterDate, 'Date');
   const dueAt = normalizeOptionalDate(req.body.dueAt, 'Follow-up date');
+  const deadlineAt = normalizeOptionalDate(req.body.deadlineAt, 'Deadline');
   const subject = String(req.body.subject || '').trim();
   const priority = String(req.body.priority || 'NORMAL');
   const senderOrganization = type === 'INCOMING'
@@ -225,6 +240,7 @@ lettersRouter.post('/', (req, res) => {
   if (letterNumber.error) return res.status(400).json({ message: letterNumber.error });
   if (letterDate.error || !letterDate.value) return res.status(400).json({ message: letterDate.error || 'Date is required' });
   if (dueAt.error) return res.status(400).json({ message: dueAt.error });
+  if (deadlineAt.error) return res.status(400).json({ message: deadlineAt.error });
   const subjectError = validateSubject(subject);
   if (subjectError) return res.status(400).json({ message: subjectError });
   if (!allowedPriorities.includes(priority)) return res.status(400).json({ message: 'Priority is invalid' });
@@ -249,6 +265,9 @@ lettersRouter.post('/', (req, res) => {
     letterNumber: letterNumber.value,
     letterDate: letterDate.value,
     dueAt: dueAt.value,
+    // Optional submission deadline (dispatched letters only) and its compliance.
+    deadlineAt: type === 'OUTGOING' ? deadlineAt.value : '',
+    compliedAt: null,
     subject,
     priority,
     trackingNumber,
@@ -402,6 +421,11 @@ lettersRouter.patch('/:id', (req, res) => {
     if (dueAt.error) return res.status(400).json({ message: dueAt.error });
     req.body.dueAt = dueAt.value;
   }
+  if (Object.prototype.hasOwnProperty.call(req.body, 'deadlineAt')) {
+    const deadlineAt = normalizeOptionalDate(req.body.deadlineAt, 'Deadline');
+    if (deadlineAt.error) return res.status(400).json({ message: deadlineAt.error });
+    req.body.deadlineAt = deadlineAt.value;
+  }
   if (Object.prototype.hasOwnProperty.call(req.body, 'letterDate')) {
     const letterDate = normalizeOptionalDate(req.body.letterDate, 'Date');
     if (letterDate.error || !letterDate.value) return res.status(400).json({ message: letterDate.error || 'Date is required' });
@@ -426,7 +450,7 @@ lettersRouter.patch('/:id', (req, res) => {
     }
   }
 
-  const editable = ['trackingNumber', 'registryNumber', 'letterDate', 'letterNumber', 'subject', 'senderOrganization', 'sender', 'recipient', 'priority', 'remarks', 'summary', 'currentDepartment', 'routeDepartment', 'assignedTo', 'dueAt', 'attachments'];
+  const editable = ['trackingNumber', 'registryNumber', 'letterDate', 'letterNumber', 'subject', 'senderOrganization', 'sender', 'recipient', 'priority', 'remarks', 'summary', 'currentDepartment', 'routeDepartment', 'assignedTo', 'dueAt', 'deadlineAt', 'attachments'];
   editable.forEach((field) => {
     if (Object.prototype.hasOwnProperty.call(req.body, field)) {
       letter[field] = field === 'attachments' ? normalizeAttachmentCount(req.body[field]) : req.body[field];
@@ -442,6 +466,29 @@ lettersRouter.patch('/:id', (req, res) => {
 
   recordMovement(letter, req, 'Letter record edited', 'Record corrected after review.', actorDepartment(req));
   recordAudit(req, 'LETTER_UPDATED', letter);
+  res.json({ data: publicLetter(letter) });
+});
+
+// Mark whether the utility complied with a dispatched letter's deadline.
+// { complied: true }  -> records compliance (met the deadline)
+// { complied: false } -> clears it (back to pending/overdue by date)
+lettersRouter.post('/:id/compliance', (req, res) => {
+  const letter = findLetter(req.params.id);
+  if (!letter) return res.status(404).json({ message: 'Letter not found' });
+  if (letter.type !== 'OUTGOING' || !letter.deadlineAt) {
+    return res.status(400).json({ message: 'Compliance is only tracked for dispatched letters that have a deadline.' });
+  }
+
+  const complied = req.body?.complied !== false;
+  letter.compliedAt = complied ? new Date().toISOString() : null;
+  letter.updatedAt = new Date().toISOString();
+
+  const label = complied ? 'Marked compliant' : 'Compliance cleared';
+  const note = complied
+    ? `${letter.recipient || 'The utility'} complied with the submission deadline.`
+    : 'Compliance mark removed.';
+  recordMovement(letter, req, label, note, actorDepartment(req));
+  recordAudit(req, complied ? 'UTILITY_MARKED_COMPLIANT' : 'UTILITY_COMPLIANCE_CLEARED', letter);
   res.json({ data: publicLetter(letter) });
 });
 

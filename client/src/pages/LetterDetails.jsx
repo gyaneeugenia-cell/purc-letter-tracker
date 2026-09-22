@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Download, Pencil, Route, Trash2 } from 'lucide-react';
+import { ArrowLeft, Download, Pencil, Route, ShieldCheck, Trash2 } from 'lucide-react';
+import { getCompliance, complianceChipClass, formatDeadline } from '../utils/compliance.js';
 import { http } from '../api/http.js';
 import { notifyLettersChanged } from '../api/letterEvents.js';
 import { StatusChip } from '../components/ui/StatusChip.jsx';
@@ -30,6 +31,7 @@ function emptyEditForm() {
     routeDepartment: 'Executive Secretary',
     assignedTo: '',
     dueAt: '',
+    deadlineAt: '',
     remarks: ''
   };
 }
@@ -129,6 +131,7 @@ export default function LetterDetails() {
       routeDepartment: sourceDepartmentForLetter(letter) === '-' ? 'Executive Secretary' : sourceDepartmentForLetter(letter),
       assignedTo: letter.assignedTo || '',
       dueAt: dateValue(letter.dueAt),
+      deadlineAt: dateValue(letter.deadlineAt),
       remarks: letter.remarks || ''
     });
     setEditError('');
@@ -217,6 +220,15 @@ export default function LetterDetails() {
     navigate(letter.type === 'OUTGOING' ? '/outgoing' : '/incoming', { replace: true });
   }
 
+  async function markCompliance(complied) {
+    const { data } = await http.post(`/letters/${id}/compliance`, { complied });
+    setLetter(data.data);
+    setMessage(complied
+      ? `${data.data.recipient || 'The utility'} marked as compliant with the deadline.`
+      : 'Compliance mark cleared.');
+    notifyLettersChanged();
+  }
+
   function backToLetterList() {
     navigate(letter.type === 'OUTGOING' ? '/outgoing' : '/incoming');
   }
@@ -274,7 +286,8 @@ export default function LetterDetails() {
         ['No. of letter', letter.letterNumber],
         ['PURC directorate the letter came from', sourceDepartmentForLetter(letter)],
         ['Recipient institution', letter.recipient],
-        ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-']
+        ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-'],
+        ['Submission deadline', letter.deadlineAt ? formatDeadline(letter.deadlineAt) : 'None set']
       ]
     : [
         ['Type', displayType(letter)],
@@ -287,6 +300,8 @@ export default function LetterDetails() {
         ['Recipient named on letter', letter.recipient],
         ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-']
       ];
+
+  const compliance = getCompliance(letter);
 
   return (
     <div className="space-y-6">
@@ -309,6 +324,11 @@ export default function LetterDetails() {
                   type chip would just repeat it. */}
               <StatusChip status={letter.status} />
               <PriorityBadge priority={letter.priority} />
+              {compliance && (
+                <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${complianceChipClass(compliance.tone)}`}>
+                  {compliance.label}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -320,6 +340,24 @@ export default function LetterDetails() {
             )}
           </div>
         </div>
+        {compliance && (
+          <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5">
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              Submission deadline: <span className="font-bold text-ink dark:text-white">{formatDeadline(letter.deadlineAt)}</span>
+              {' · '}
+              {compliance.status === 'COMPLIANT'
+                ? `${letter.recipient || 'The utility'} complied.`
+                : compliance.status === 'OVERDUE'
+                  ? `Overdue by ${compliance.overdueBy} day${compliance.overdueBy === 1 ? '' : 's'} — flagged non-compliant.`
+                  : `${compliance.label} — awaiting the utility's response.`}
+            </p>
+            {compliance.status === 'COMPLIANT' ? (
+              <button className="secondary-button" onClick={() => markCompliance(false)}>Clear compliance</button>
+            ) : (
+              <button className="primary-button" onClick={() => markCompliance(true)}><ShieldCheck size={16} /> Mark as complied</button>
+            )}
+          </div>
+        )}
       </div>
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
         <section className="space-y-6">
@@ -475,6 +513,12 @@ export default function LetterDetails() {
               {purcDepartments.map((department) => <option key={department}>{department}</option>)}
             </select>
           </label>
+          {letter.type === 'OUTGOING' && (
+            <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
+              Submission deadline <span className="font-normal text-slate-400">(optional)</span>
+              <input className="input" type="date" value={editForm.deadlineAt} onChange={(event) => setEditForm({ ...editForm, deadlineAt: event.target.value })} />
+            </label>
+          )}
           <textarea className="input md:col-span-2" rows="3" placeholder="Remarks" value={editForm.remarks} onChange={(event) => setEditForm({ ...editForm, remarks: event.target.value })} />
           <button className="primary-button md:col-span-2">Save corrections</button>
         </form>

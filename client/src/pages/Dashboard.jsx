@@ -7,6 +7,7 @@ import { ExportButtons } from '../components/ui/ExportButtons.jsx';
 import { letterExportColumns } from '../utils/letterColumns.js';
 import { DataTable } from '../components/ui/DataTable.jsx';
 import { MetricStat } from '../components/ui/MetricStat.jsx';
+import { DeadlineReminders } from '../components/ui/DeadlineReminders.jsx';
 import { Skeleton } from '../components/ui/Skeleton.jsx';
 import { allStatusOptions, incomingStatusOptions, outgoingStatusOptions } from '../constants/statuses.js';
 import { institutionSearchTerms } from '../constants/institutions.js';
@@ -92,6 +93,9 @@ export default function Dashboard() {
           setGroupBy={setGroupBy}
         />
       </div>
+
+      {/* Standing reminder of dispatched-letter deadlines that need attention */}
+      <DeadlineReminders />
 
       {/* Metrics — flat, borderless, whitespace-led */}
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-0 sm:divide-x sm:divide-slate-200 dark:sm:divide-white/10">

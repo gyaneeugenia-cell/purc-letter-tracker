@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "purc-compliance-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:\\Users\\MainUser\\Documents\\Codex\\2026-07-14\\you-are-building-a-professional-internal", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

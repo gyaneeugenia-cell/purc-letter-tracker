@@ -4,6 +4,7 @@ import { Modal } from './Modal.jsx';
 import { StatusChip } from './StatusChip.jsx';
 import { PriorityBadge } from './PriorityBadge.jsx';
 import { statusLabels } from '../../constants/statuses.js';
+import { getCompliance, complianceChipClass, formatDeadline } from '../../utils/compliance.js';
 
 function displayDateTime(letter) {
   const timestamp = letter.receivedAt || letter.dispatchedAt || letter.createdAt;
@@ -42,15 +43,21 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
   const [statusError, setStatusError] = useState('');
   const canChangeStatus = typeof onStatusChange === 'function' && statusOptions.length > 0;
   const showRecipientDepartment = letterType === 'INCOMING';
+  // Dispatched letters can carry a submission deadline and a compliance flag.
+  const showCompliance = !operational && letterType === 'OUTGOING';
   const standardHeaders = showRecipientDepartment
     ? ['Date', 'Reference No.', 'Institution', 'From Whom Sent', 'Registry Number', 'Subject', 'Recipient Directorate', 'Status', 'Remarks']
-    : ['Date', 'Reference No.', 'Recipient Institution', 'Registry Number', 'Subject', 'Responsible Directorate', 'Status', 'Remarks'];
+    : showCompliance
+      ? ['Date', 'Reference No.', 'Recipient Institution', 'Registry Number', 'Subject', 'Responsible Directorate', 'Status', 'Deadline', 'Compliance', 'Remarks']
+      : ['Date', 'Reference No.', 'Recipient Institution', 'Registry Number', 'Subject', 'Responsible Directorate', 'Status', 'Remarks'];
   const operationalHeaders = ['Date', 'Reference No.', 'Type', 'Institution / Recipient', 'Subject', 'Status'];
   const baseHeaders = operational ? operationalHeaders : standardHeaders;
   const headers = canChangeStatus && !operational ? [...baseHeaders, 'Letter Status'] : baseHeaders;
   const standardColumnWidths = showRecipientDepartment
     ? [130, 180, 190, 160, 140, 220, 200, 190, 220]
-    : [130, 180, 190, 140, 240, 200, 190, 220];
+    : showCompliance
+      ? [130, 180, 190, 140, 240, 200, 150, 130, 150, 200]
+      : [130, 180, 190, 140, 240, 200, 190, 220];
   const baseColumnWidths = operational ? [130, 180, 130, 190, 280, 190] : standardColumnWidths;
   const columnWidths = canChangeStatus && !operational ? [...baseColumnWidths, 190] : baseColumnWidths;
   const tableWidth = columnWidths.reduce((total, width) => total + width, 0);
@@ -152,6 +159,18 @@ export function DataTable({ rows = [], embedded = false, operational = false, le
                         <PriorityBadge priority={letter.priority} />
                       </div>
                     </td>
+                    {showCompliance && (
+                      <>
+                        <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{formatDeadline(letter.deadlineAt)}</td>
+                        <td className="px-4 py-4">
+                          {(() => {
+                            const c = getCompliance(letter);
+                            if (!c) return <span className="text-xs font-medium text-slate-400">No deadline</span>;
+                            return <span className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-bold ${complianceChipClass(c.tone)}`}>{c.label}</span>;
+                          })()}
+                        </td>
+                      </>
+                    )}
                     <td className="px-4 py-4">
                       <p className="text-xs font-semibold text-slate-500 dark:text-slate-300">{letter.remarks || 'No Remarks'}</p>
                     </td>

@@ -30,6 +30,7 @@ function emptyForm(type) {
     attachments: 0,
     priority: 'NORMAL',
     dueAt: '',
+    deadlineAt: '',
     remarks: '',
     currentDepartment: 'ES office',
     routeDepartment: 'Executive Secretary'
@@ -141,6 +142,8 @@ export default function Letters({ type }) {
     const payload = {
       ...form,
       subject: form.subject.trim(),
+      // Deadlines only apply to dispatched letters.
+      deadlineAt: type === 'OUTGOING' ? form.deadlineAt : '',
       senderOrganization,
       // Received letters are always addressed to the Executive Secretariat.
       routeDepartment: type === 'INCOMING' ? executiveSecretariat : form.routeDepartment,
@@ -339,6 +342,18 @@ export default function Letters({ type }) {
               <select className="input" value={form.routeDepartment} onChange={(e) => setForm({ ...form, routeDepartment: e.target.value })}>
                 {purcDepartments.map((department) => <option key={department}>{department}</option>)}
               </select>
+            </label>
+          )}
+          {type === 'OUTGOING' && (
+            <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
+              Submission deadline <span className="font-normal text-slate-400">(optional — the date the utility must respond by)</span>
+              <input
+                className="input"
+                type="date"
+                value={form.deadlineAt}
+                min={form.letterDate || undefined}
+                onChange={(e) => setForm({ ...form, deadlineAt: e.target.value })}
+              />
             </label>
           )}
           <textarea className="input md:col-span-2" rows="3" placeholder="Remarks" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} />
