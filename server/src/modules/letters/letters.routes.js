@@ -121,9 +121,12 @@ function hasDispatchMovement(letter, department) {
 // null       = no deadline, so nothing to track.
 function complianceFor(letter) {
   if (letter.type !== 'OUTGOING' || !letter.deadlineAt) return null;
-  if (letter.compliedAt) return 'COMPLIANT';
   const end = new Date(letter.deadlineAt);
   end.setHours(23, 59, 59, 999); // the utility has until the end of the deadline day
+  if (letter.compliedAt) {
+    // A response was captured. Compliant if it arrived by the deadline, otherwise late.
+    return new Date(letter.compliedAt).getTime() <= end.getTime() ? 'COMPLIANT' : 'COMPLIED_LATE';
+  }
   return Date.now() > end.getTime() ? 'OVERDUE' : 'PENDING';
 }
 
@@ -469,9 +472,10 @@ lettersRouter.patch('/:id', (req, res) => {
   res.json({ data: publicLetter(letter) });
 });
 
-// Mark whether the utility complied with a dispatched letter's deadline.
-// { complied: true }  -> records compliance (met the deadline)
-// { complied: false } -> clears it (back to pending/overdue by date)
+// Capture the utility's response to a dispatched letter (which flags compliance),
+// or clear a captured response.
+//   { complied: true, respondedAt?: 'YYYY-MM-DD', note?: '...' }  -> record response
+//   { complied: false }                                           -> clear it
 lettersRouter.post('/:id/compliance', (req, res) => {
   const letter = findLetter(req.params.id);
   if (!letter) return res.status(404).json({ message: 'Letter not found' });
@@ -480,15 +484,27 @@ lettersRouter.post('/:id/compliance', (req, res) => {
   }
 
   const complied = req.body?.complied !== false;
-  letter.compliedAt = complied ? new Date().toISOString() : null;
-  letter.updatedAt = new Date().toISOString();
 
-  const label = complied ? 'Marked compliant' : 'Compliance cleared';
-  const note = complied
-    ? `${letter.recipient || 'The utility'} complied with the submission deadline.`
-    : 'Compliance mark removed.';
-  recordMovement(letter, req, label, note, actorDepartment(req));
-  recordAudit(req, complied ? 'UTILITY_MARKED_COMPLIANT' : 'UTILITY_COMPLIANCE_CLEARED', letter);
+  if (complied) {
+    // The date the utility's feedback was received (defaults to today).
+    const responded = normalizeOptionalDate(req.body?.respondedAt, 'Response date');
+    if (responded.error) return res.status(400).json({ message: responded.error });
+    letter.compliedAt = responded.value
+      ? new Date(`${responded.value}T12:00:00`).toISOString()
+      : new Date().toISOString();
+    letter.responseNote = String(req.body?.note || '').trim();
+    const onTime = new Date(letter.compliedAt).getTime() <= new Date(`${letter.deadlineAt}T23:59:59`).getTime();
+    const note = `Response received from ${letter.recipient || 'the utility'}${onTime ? ' (within the deadline)' : ' (after the deadline)'}.${letter.responseNote ? ' ' + letter.responseNote : ''}`;
+    recordMovement(letter, req, 'Response received', note, actorDepartment(req));
+    recordAudit(req, 'UTILITY_RESPONSE_RECEIVED', letter);
+  } else {
+    letter.compliedAt = null;
+    letter.responseNote = '';
+    recordMovement(letter, req, 'Response record cleared', 'The recorded response was removed.', actorDepartment(req));
+    recordAudit(req, 'UTILITY_RESPONSE_CLEARED', letter);
+  }
+
+  letter.updatedAt = new Date().toISOString();
   res.json({ data: publicLetter(letter) });
 });
 

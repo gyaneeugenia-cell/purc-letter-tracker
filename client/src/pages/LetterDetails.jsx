@@ -82,6 +82,8 @@ export default function LetterDetails() {
   const [workflowOpen, setWorkflowOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [responseOpen, setResponseOpen] = useState(false);
+  const [responseForm, setResponseForm] = useState({ respondedAt: '', note: '' });
   const [routeDepartment, setRouteDepartment] = useState('Executive Secretary');
   const [workflowForm, setWorkflowForm] = useState({ status: '', currentDepartment: 'Executive Secretary', note: '' });
   const [editForm, setEditForm] = useState(emptyEditForm());
@@ -220,13 +222,29 @@ export default function LetterDetails() {
     navigate(letter.type === 'OUTGOING' ? '/outgoing' : '/incoming', { replace: true });
   }
 
-  async function markCompliance(complied) {
-    const { data } = await http.post(`/letters/${id}/compliance`, { complied });
+  async function submitResponse(event) {
+    event.preventDefault();
+    const { data } = await http.post(`/letters/${id}/compliance`, {
+      complied: true,
+      respondedAt: responseForm.respondedAt,
+      note: responseForm.note
+    });
     setLetter(data.data);
-    setMessage(complied
-      ? `${data.data.recipient || 'The utility'} marked as compliant with the deadline.`
-      : 'Compliance mark cleared.');
+    setResponseOpen(false);
+    setMessage(`Response from ${data.data.recipient || 'the utility'} recorded.`);
     notifyLettersChanged();
+  }
+
+  async function clearResponse() {
+    const { data } = await http.post(`/letters/${id}/compliance`, { complied: false });
+    setLetter(data.data);
+    setMessage('Recorded response cleared.');
+    notifyLettersChanged();
+  }
+
+  function openResponseModal() {
+    setResponseForm({ respondedAt: new Date().toISOString().slice(0, 10), note: '' });
+    setResponseOpen(true);
   }
 
   function backToLetterList() {
@@ -342,19 +360,29 @@ export default function LetterDetails() {
         </div>
         {compliance && (
           <div className="flex flex-col gap-3 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5">
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
-              Submission deadline: <span className="font-bold text-ink dark:text-white">{formatDeadline(letter.deadlineAt)}</span>
-              {' · '}
-              {compliance.status === 'COMPLIANT'
-                ? `${letter.recipient || 'The utility'} complied.`
-                : compliance.status === 'OVERDUE'
-                  ? `Overdue by ${compliance.overdueBy} day${compliance.overdueBy === 1 ? '' : 's'} — flagged non-compliant.`
-                  : `${compliance.label} — awaiting the utility's response.`}
-            </p>
-            {compliance.status === 'COMPLIANT' ? (
-              <button className="secondary-button" onClick={() => markCompliance(false)}>Clear compliance</button>
+            <div className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              <p>
+                Submission deadline: <span className="font-bold text-ink dark:text-white">{formatDeadline(letter.deadlineAt)}</span>
+                {' · '}
+                {compliance.status === 'COMPLIANT'
+                  ? `Response received on ${formatDeadline(letter.compliedAt)} — compliant.`
+                  : compliance.status === 'COMPLIED_LATE'
+                    ? `Response received on ${formatDeadline(letter.compliedAt)} — after the deadline (late).`
+                    : compliance.status === 'OVERDUE'
+                      ? `Overdue by ${compliance.overdueBy} day${compliance.overdueBy === 1 ? '' : 's'} — no response yet, flagged non-compliant.`
+                      : `${compliance.label} — awaiting the utility's response.`}
+              </p>
+              {letter.compliedAt && letter.responseNote && (
+                <p className="mt-1 font-normal text-slate-500 dark:text-slate-400">Feedback: {letter.responseNote}</p>
+              )}
+            </div>
+            {letter.compliedAt ? (
+              <div className="flex flex-wrap gap-2">
+                <button className="secondary-button" onClick={openResponseModal}><Pencil size={16} /> Edit response</button>
+                <button className="secondary-button text-purcRed hover:text-purcRed" onClick={clearResponse}>Clear response</button>
+              </div>
             ) : (
-              <button className="primary-button" onClick={() => markCompliance(true)}><ShieldCheck size={16} /> Mark as complied</button>
+              <button className="primary-button" onClick={openResponseModal}><ShieldCheck size={16} /> Record response received</button>
             )}
           </div>
         )}
@@ -532,6 +560,23 @@ export default function LetterDetails() {
             <button className="primary-button flex-1 bg-purcRed hover:bg-red-800" onClick={deleteLetter}>Delete record</button>
           </div>
         </div>
+      </Modal>
+      <Modal open={responseOpen} title="Record response received" onClose={() => setResponseOpen(false)}>
+        <form onSubmit={submitResponse} className="space-y-4">
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            Record the feedback received from {letter.recipient || 'the utility'}. This flags them as compliant
+            (or complied late if the response came after {formatDeadline(letter.deadlineAt)}).
+          </p>
+          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Date response was received
+            <input className="input" type="date" value={responseForm.respondedAt} onChange={(e) => setResponseForm({ ...responseForm, respondedAt: e.target.value })} required />
+          </label>
+          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
+            Feedback note <span className="font-normal text-slate-400">(optional — what they sent / their reply reference)</span>
+            <textarea className="input" rows="3" placeholder="e.g. Submitted Q2 2025 report via email; ref ECG/2025/142" value={responseForm.note} onChange={(e) => setResponseForm({ ...responseForm, note: e.target.value })} />
+          </label>
+          <button className="primary-button w-full"><ShieldCheck size={16} /> Save response &amp; flag compliant</button>
+        </form>
       </Modal>
     </div>
   );

@@ -22,7 +22,11 @@ export function getCompliance(letter) {
   const daysLeft = Math.ceil((end - Date.now()) / DAY);
 
   if (letter.compliedAt) {
-    return { status: 'COMPLIANT', label: 'Compliant', tone: 'emerald', daysLeft };
+    // A response was captured — compliant if it arrived by the deadline, else late.
+    const onTime = new Date(letter.compliedAt).getTime() <= end;
+    return onTime
+      ? { status: 'COMPLIANT', label: 'Compliant', tone: 'emerald', daysLeft, respondedAt: letter.compliedAt }
+      : { status: 'COMPLIED_LATE', label: 'Complied late', tone: 'amber', daysLeft, respondedAt: letter.compliedAt };
   }
   if (Date.now() > end) {
     const overdueBy = Math.abs(daysLeft);
