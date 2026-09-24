@@ -367,7 +367,7 @@ export default function LetterDetails() {
                 {compliance.status === 'COMPLIANT'
                   ? `Response received on ${formatDeadline(letter.compliedAt)} — compliant.`
                   : compliance.status === 'COMPLIED_LATE'
-                    ? `Response received on ${formatDeadline(letter.compliedAt)} — after the deadline (late).`
+                    ? `Response received on ${formatDeadline(letter.compliedAt)} — after the deadline, flagged non-compliant.`
                     : compliance.status === 'OVERDUE'
                       ? `Overdue by ${compliance.overdueBy} day${compliance.overdueBy === 1 ? '' : 's'} — no response yet, flagged non-compliant.`
                       : `${compliance.label} — awaiting the utility's response.`}
@@ -565,7 +565,7 @@ export default function LetterDetails() {
         <form onSubmit={submitResponse} className="space-y-4">
           <p className="text-sm text-slate-600 dark:text-slate-300">
             Record the feedback received from {letter.recipient || 'the utility'}. This flags them as compliant
-            (or complied late if the response came after {formatDeadline(letter.deadlineAt)}).
+            (or non-compliant if the response came after {formatDeadline(letter.deadlineAt)}).
           </p>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Date response was received

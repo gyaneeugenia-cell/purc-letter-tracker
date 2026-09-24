@@ -26,7 +26,7 @@ export function getCompliance(letter) {
     const onTime = new Date(letter.compliedAt).getTime() <= end;
     return onTime
       ? { status: 'COMPLIANT', label: 'Compliant', tone: 'emerald', daysLeft, respondedAt: letter.compliedAt }
-      : { status: 'COMPLIED_LATE', label: 'Complied late', tone: 'amber', daysLeft, respondedAt: letter.compliedAt };
+      : { status: 'COMPLIED_LATE', label: 'Non-compliant', tone: 'red', daysLeft, respondedAt: letter.compliedAt };
   }
   if (Date.now() > end) {
     const overdueBy = Math.abs(daysLeft);

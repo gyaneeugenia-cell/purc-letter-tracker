@@ -10,6 +10,18 @@ import { getCompliance, complianceChipClass, formatDeadline } from '../../utils/
 export function DeadlineReminders() {
   const [letters, setLetters] = useState([]);
   const [tick, setTick] = useState(0);
+  // Remember whether the user collapsed the panel.
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem('purc_reminders_collapsed') === '1'; } catch { return false; }
+  });
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try { localStorage.setItem('purc_reminders_collapsed', next ? '1' : '0'); } catch { /* ignore */ }
+      return next;
+    });
+  }
 
   useEffect(() => {
     let active = true;
@@ -45,7 +57,15 @@ export function DeadlineReminders() {
         <span className="ml-auto text-xs font-bold text-amber-700 dark:text-amber-300">
           {overdue > 0 && `${overdue} overdue`}{overdue > 0 && dueSoon > 0 && ' · '}{dueSoon > 0 && `${dueSoon} due soon`}
         </span>
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          className="rounded-lg border border-amber-300 px-3 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-100 dark:border-amber-800/60 dark:text-amber-200 dark:hover:bg-amber-900/40"
+        >
+          {collapsed ? 'Show' : 'Hide'}
+        </button>
       </div>
+      {!collapsed && (
       <ul className="mt-4 space-y-2">
         {items.map(({ letter, compliance }) => (
           <li key={letter.id}>
@@ -67,6 +87,7 @@ export function DeadlineReminders() {
           </li>
         ))}
       </ul>
+      )}
     </section>
   );
 }
