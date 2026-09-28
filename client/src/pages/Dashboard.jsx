@@ -111,9 +111,11 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-white">Letter Register</h2>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {isAllTimeRange(timeRange) ? 'Letters recorded to date' : `Letters recorded within ${rangeLabel.toLowerCase()}.`}
-            </p>
+            {!isAllTimeRange(timeRange) && (
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                Letters recorded within {rangeLabel.toLowerCase()}.
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <button type="button" className="soft-button" onClick={() => navigate('/incoming?new=1')}>

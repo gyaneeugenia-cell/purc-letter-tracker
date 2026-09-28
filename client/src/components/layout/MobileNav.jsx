@@ -27,7 +27,7 @@ export function MobileNav({ open, onClose }) {
         className={`absolute left-0 top-0 flex h-full w-[80%] max-w-xs flex-col border-r border-slate-200 bg-white shadow-2xl transition-transform duration-200 dark:border-white/10 dark:bg-slate-950 ${open ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex h-20 items-center gap-3 border-b border-slate-100 px-4 dark:border-white/10">
-          <img src="/purc_logo.bmp" alt="PURC logo" className="h-11 w-11 shrink-0 object-contain mix-blend-multiply dark:mix-blend-normal" />
+          <img src="/purc_logo.png" alt="PURC logo" className="h-11 w-11 shrink-0 object-contain" />
           <div className="min-w-0 flex-1">
             <p className="text-sm font-black leading-tight text-purcRed dark:text-red-200">PUBLIC UTILITIES</p>
             <p className="text-[11px] font-extrabold leading-tight text-purcBlue dark:text-blue-100">REGULATORY COMMISSION</p>

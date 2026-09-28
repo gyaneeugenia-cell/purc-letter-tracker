@@ -135,7 +135,7 @@ export default function Login() {
 
       <header className="relative">
         <div className="mx-auto flex min-h-20 max-w-6xl flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:flex-row sm:gap-4 sm:px-6">
-          <img src="/purc_logo.bmp" alt="PURC logo" className="h-12 w-12 shrink-0 rounded-full object-contain opacity-90 mix-blend-multiply sm:h-16 sm:w-16" />
+          <img src="/purc_logo.png" alt="PURC logo" className="h-12 w-12 shrink-0 rounded-full object-contain opacity-90 sm:h-16 sm:w-16" />
           <div className="min-w-0 text-center">
             <p className="text-balance text-[clamp(1.05rem,4.5vw,2.55rem)] font-black leading-tight tracking-tight text-ink">PURC Letter &amp; Document Tracking System</p>
           </div>

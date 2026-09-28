@@ -575,7 +575,7 @@ export default function LetterDetails() {
             Feedback note <span className="font-normal text-slate-400">(optional — what they sent / their reply reference)</span>
             <textarea className="input" rows="3" placeholder="e.g. Submitted Q2 2025 report via email; ref ECG/2025/142" value={responseForm.note} onChange={(e) => setResponseForm({ ...responseForm, note: e.target.value })} />
           </label>
-          <button className="primary-button w-full"><ShieldCheck size={16} /> Save response &amp; flag compliant</button>
+          <button className="primary-button w-full"><ShieldCheck size={16} /> Save response</button>
         </form>
       </Modal>
     </div>

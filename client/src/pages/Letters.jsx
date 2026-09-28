@@ -95,6 +95,15 @@ export default function Letters({ type }) {
     setFormError('');
   }, [type]);
 
+  // Refresh the register whenever a letter changes elsewhere (e.g. a response is
+  // recorded), so the Compliance column stays current automatically.
+  useEffect(() => {
+    const handler = () => loadLetters();
+    window.addEventListener('purc-letters-changed', handler);
+    return () => window.removeEventListener('purc-letters-changed', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type]);
+
   useEffect(() => {
     if (searchParams.get('new') === '1') {
       setOpen(true);
