@@ -91,6 +91,7 @@ export default function Dashboard() {
           setTimeRange={setTimeRange}
           groupBy={groupBy}
           setGroupBy={setGroupBy}
+          showGrouping={false}
         />
       </div>
 

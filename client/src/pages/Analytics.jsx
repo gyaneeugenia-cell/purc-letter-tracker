@@ -3,7 +3,7 @@ import { TrendingUp } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { http } from '../api/http.js';
 import { useAuth } from '../context/AuthContext.jsx';
-import { PeriodLabel, formatRangeLabel, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
+import { PeriodLabel, formatRangeLabel, groupingOptions, usePersistentPeriod } from '../components/ui/PeriodControls.jsx';
 import { ChartExport } from '../components/ui/ChartExport.jsx';
 
 // Bright but lightened palette — vivid without straining
@@ -37,7 +37,8 @@ function PieLabel({ cx, cy, midAngle, innerRadius, outerRadius, value }) {
 export default function Analytics() {
   const { theme } = useAuth();
   const [data, setData] = useState(null);
-  const { timeRange, groupBy } = usePersistentPeriod();
+  const { timeRange, groupBy, setGroupBy } = usePersistentPeriod();
+  const singleDate = timeRange.from === timeRange.to;
   const flowChartRef = useRef(null);
   const deptChartRef = useRef(null);
   const priorityChartRef = useRef(null);
@@ -177,7 +178,22 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <PeriodLabel timeRange={timeRange} />
+      <div className="flex flex-wrap items-center gap-3">
+        <PeriodLabel timeRange={timeRange} />
+        <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-800 dark:text-slate-100">
+          <span className="text-purcBlue dark:text-blue-300">{singleDate ? 'Date Grouping' : 'Range Grouping'}</span>
+          <select
+            value={groupBy}
+            onChange={(event) => setGroupBy(event.target.value)}
+            disabled={singleDate}
+            className="min-w-0 bg-transparent font-black text-slate-800 outline-none disabled:cursor-not-allowed dark:text-white"
+          >
+            {(singleDate ? groupingOptions.filter((o) => o.value === 'daily') : groupingOptions).map((option) => (
+              <option key={option.value} value={option.value} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">{option.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="space-y-6">
 

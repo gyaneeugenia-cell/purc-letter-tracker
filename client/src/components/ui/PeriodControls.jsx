@@ -74,6 +74,11 @@ function getSavedPeriod() {
     // If no saved period, use all-time default
     if (!saved?.timeRange?.from) return fallback;
     const timeRange = normalizeRange(saved.timeRange);
+    // Keep the "All Records (To Date)" selection current every time the app opens,
+    // so the end date is always today rather than the date it was last saved.
+    if (timeRange.from === ALL_TIME_START) {
+      timeRange.to = toDateInput(new Date());
+    }
     return { timeRange, groupBy: normalizeGrouping(saved?.groupBy, timeRange) };
   } catch {
     return fallback;
@@ -114,7 +119,7 @@ export function PeriodLabel({ timeRange }) {
   );
 }
 
-export function PeriodControls({ timeRange, setTimeRange, groupBy, setGroupBy, active = true }) {
+export function PeriodControls({ timeRange, setTimeRange, groupBy, setGroupBy, active = true, showGrouping = true }) {
   const [open, setOpen] = useState(false);
   const [draftRange, setDraftRange] = useState(timeRange);
   const [draftDate, setDraftDate] = useState(timeRange.from);
@@ -182,19 +187,21 @@ export function PeriodControls({ timeRange, setTimeRange, groupBy, setGroupBy, a
         <span className="truncate">{formatRangeLabel(timeRange)}</span>
       </button>
 
-      <label className="flex min-w-[220px] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-800 dark:text-slate-100">
-        <span className="text-purcBlue dark:text-blue-300">{groupingLabel}</span>
-        <select
-          value={groupBy}
-          onChange={(event) => setGroupBy(event.target.value)}
-          disabled={actualSingleDate}
-          className="min-w-0 flex-1 bg-transparent font-black text-slate-800 outline-none disabled:cursor-not-allowed dark:text-white"
-        >
-          {visibleGroupingOptions.map((option) => (
-            <option key={option.value} value={option.value} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">{option.label}</option>
-          ))}
-        </select>
-      </label>
+      {showGrouping && (
+        <label className="flex min-w-[220px] items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm dark:border-white/10 dark:bg-slate-800 dark:text-slate-100">
+          <span className="text-purcBlue dark:text-blue-300">{groupingLabel}</span>
+          <select
+            value={groupBy}
+            onChange={(event) => setGroupBy(event.target.value)}
+            disabled={actualSingleDate}
+            className="min-w-0 flex-1 bg-transparent font-black text-slate-800 outline-none disabled:cursor-not-allowed dark:text-white"
+          >
+            {visibleGroupingOptions.map((option) => (
+              <option key={option.value} value={option.value} className="bg-white text-slate-900 dark:bg-slate-900 dark:text-white">{option.label}</option>
+            ))}
+          </select>
+        </label>
+      )}
 
       {open && (
         <div className="absolute left-0 top-[calc(100%+0.5rem)] z-[9999] w-[min(380px,calc(100vw-2rem))] rounded-xl border border-slate-200 bg-white p-4 shadow-2xl dark:border-white/10 dark:bg-slate-900">

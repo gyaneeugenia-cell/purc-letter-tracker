@@ -145,20 +145,20 @@ export default function Login() {
       <main className="relative">
         <div className="mx-auto flex min-h-[calc(100vh-80px)] max-w-5xl items-start justify-center px-6 pb-8 pt-1">
           <section className="flex w-full items-center justify-center">
-          <form onSubmit={onSubmit} className="w-full max-w-lg rounded-xl border border-slate-200/80 bg-white/95 p-5 text-center shadow-[0_24px_90px_rgba(6,29,58,0.16)] backdrop-blur md:p-6">
+          <form onSubmit={onSubmit} className="w-full max-w-sm rounded-xl border border-slate-200/80 bg-white/95 p-5 text-center shadow-[0_16px_60px_rgba(6,29,58,0.12)] backdrop-blur">
             <div className="purc-red-rule mx-auto" />
-            <p className="mt-4 text-xs font-extrabold uppercase tracking-[0.22em] text-purcBlue">Account access</p>
-            <h2 className="mt-2 text-2xl font-black text-ink">Sign in to PURC Tracker</h2>
+            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-purcBlue">Account access</p>
+            <h2 className="mt-1.5 text-lg font-semibold text-ink">Sign in to PURC Tracker</h2>
             <div className="mt-5 space-y-3">
               <label className="block text-left">
-                <span className="text-sm font-bold text-slate-700">Email</span>
+                <span className="text-sm font-medium text-slate-700">Email</span>
                 <div className="relative mt-2">
                   <input type="email" autoComplete="email" placeholder="Enter your email" className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={email} onChange={(event) => setEmail(event.target.value)} />
                   <UserRound className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                 </div>
               </label>
               <label className="block text-left">
-                <span className="text-sm font-bold text-slate-700">Password</span>
+                <span className="text-sm font-medium text-slate-700">Password</span>
                 <div className="relative mt-2">
                   <input type={showPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Enter your password" className="w-full rounded-sm border border-slate-300 bg-slate-50 px-4 py-2.5 pr-12 text-slate-950 outline-none transition focus:border-purcBlue focus:ring-4 focus:ring-blue-500/10" value={password} onChange={(event) => setPassword(event.target.value)} />
                   <button type="button" onClick={() => setShowPassword((value) => !value)} className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm p-2 text-slate-500 hover:bg-slate-100 hover:text-ink" aria-label={showPassword ? 'Hide password' : 'Show password'}>
@@ -168,7 +168,7 @@ export default function Login() {
               </label>
             </div>
             {error && <p className="mt-4 rounded-sm bg-red-50 px-3 py-2 text-sm font-semibold text-purcRed">{error}</p>}
-            <button disabled={loading} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-purcBlue px-4 py-3 font-black text-white shadow-lg transition hover:bg-ink disabled:opacity-60">
+            <button disabled={loading} className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-purcBlue px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-ink disabled:opacity-60">
               <LockKeyhole size={16} />
               {loading ? 'Signing in...' : 'Sign in to PURC Tracker'}
             </button>
@@ -177,14 +177,14 @@ export default function Login() {
               or
               <span className="h-px flex-1 bg-slate-200" />
             </div>
-            <div className="flex items-center justify-center text-xs font-bold text-purcBlue">
+            <div className="flex items-center justify-center text-xs font-medium text-purcBlue">
               <button type="button" onClick={openResetModal} className="inline-flex items-center gap-2 hover:text-ink">
                 <LockKeyhole size={14} /> Forgot password?
               </button>
             </div>
-            <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3 text-center text-sm font-bold text-slate-700">
+            <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-2.5 text-center text-sm font-medium text-slate-700">
               New User?{' '}
-              <button type="button" onClick={() => { setError(''); setSignupOpen(true); }} className="text-purcBlue underline-offset-4 hover:text-ink hover:underline">
+              <button type="button" onClick={() => { setError(''); setSignupOpen(true); }} className="font-semibold text-purcBlue underline-offset-4 hover:text-ink hover:underline">
                 Sign up
               </button>
             </div>
@@ -198,7 +198,7 @@ export default function Login() {
             <>
               <p className="text-sm text-slate-600">Enter your email to begin. You will answer your security question and choose a new password.</p>
               <label className="block text-left">
-                <span className="text-sm font-bold text-slate-700">Email</span>
+                <span className="text-sm font-medium text-slate-700">Email</span>
                 <input
                   className="input mt-2"
                   type="email"
