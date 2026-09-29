@@ -48,6 +48,10 @@ CREATE TABLE IF NOT EXISTS letters (
 -- Make sure the readable label columns exist even on databases created earlier.
 ALTER TABLE letters ADD COLUMN IF NOT EXISTS type_label TEXT;
 ALTER TABLE letters ADD COLUMN IF NOT EXISTS status_label TEXT;
+-- Deadline + compliance are stored as real columns (not only inside the JSON blob)
+-- so they survive reliably across restarts.
+ALTER TABLE letters ADD COLUMN IF NOT EXISTS deadline_at TEXT;
+ALTER TABLE letters ADD COLUMN IF NOT EXISTS complied_at TEXT;
 CREATE TABLE IF NOT EXISTS letter_movements (
   id TEXT PRIMARY KEY, letter_id TEXT, title TEXT, actor TEXT, department TEXT,
   status TEXT, at TEXT, note TEXT, data JSONB
@@ -81,11 +85,11 @@ const TABLES = {
     array: letters,
     columns: ['id', 'tracking_number', 'type', 'type_label', 'status', 'status_label', 'priority', 'subject', 'sender_organization',
       'sender', 'recipient', 'route_department', 'current_department', 'registry_number', 'letter_number',
-      'letter_date', 'attachments', 'remarks', 'due_at', 'received_at', 'dispatched_at', 'created_at',
+      'letter_date', 'attachments', 'remarks', 'due_at', 'deadline_at', 'complied_at', 'received_at', 'dispatched_at', 'created_at',
       'updated_at', 'created_by', 'created_by_department'],
     values: (l) => [l.id, l.trackingNumber, l.type, TYPE_LABELS[l.type] || l.type, l.status, STATUS_LABELS[l.status] || l.status, l.priority, l.subject, l.senderOrganization,
       l.sender, l.recipient, l.routeDepartment, l.currentDepartment, l.registryNumber, l.letterNumber,
-      l.letterDate, Number(l.attachments) || 0, l.remarks, l.dueAt, l.receivedAt, l.dispatchedAt,
+      l.letterDate, Number(l.attachments) || 0, l.remarks, l.dueAt, l.deadlineAt || null, l.compliedAt || null, l.receivedAt, l.dispatchedAt,
       l.createdAt, l.updatedAt, l.createdBy, l.createdByDepartment]
   },
   letter_movements: {
@@ -188,6 +192,22 @@ export async function initPersistence() {
       enabled = true;
       await markSeeded(); // records the marker for databases seeded before this change
       console.log('[persistence] Database connected — saved data restored.');
+    }
+
+    // Safety net: restore deadline/compliance from the explicit columns for any
+    // letter whose JSON blob happens to be missing them, so a deadline never
+    // vanishes after a restart.
+    try {
+      const { rows: dcRows } = await pool.query('SELECT id, deadline_at, complied_at FROM letters');
+      const dcMap = new Map(dcRows.map((r) => [r.id, r]));
+      letters.forEach((l) => {
+        const row = dcMap.get(l.id);
+        if (!row) return;
+        if ((l.deadlineAt === undefined || l.deadlineAt === null) && row.deadline_at) l.deadlineAt = row.deadline_at;
+        if ((l.compliedAt === undefined || l.compliedAt === null) && row.complied_at) l.compliedAt = row.complied_at;
+      });
+    } catch (err) {
+      console.error('[persistence] deadline backfill skipped:', err.message);
     }
 
     // Collapse any legacy priorities to the two supported values (URGENT/NORMAL).
