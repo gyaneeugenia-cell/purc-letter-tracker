@@ -7,7 +7,6 @@ const institutions = [
   { name: 'Twin City Energy Limited', aliases: ['twin city energy', 'twin city energy limited'] },
   { name: 'Amandi Energy Limited', aliases: ['amandi', 'amandi energy limited'] },
   { name: 'CENIT Energy Limited', aliases: ['cenit', 'cenit energy limited'] },
-  { name: 'Trojan Power Limited', aliases: ['trojan', 'trojan power limited'] },
   { name: 'Genser Energy Ghana Limited', aliases: ['genser', 'genser energy ghana limited'] },
   { name: 'Early Power Limited', aliases: ['early power', 'early power limited'] },
   { name: 'Rotan Power Limited', aliases: ['rotan', 'rotan power limited'] },

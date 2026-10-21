@@ -39,15 +39,18 @@ export function DeadlineReminders() {
   // tick is only used to force recomputation over time.
   void tick;
 
+  // Show every dispatched letter that still has an open deadline — overdue, due
+  // soon, OR simply upcoming — so no pending deadline is ever missed. Letters the
+  // utility has already responded to (compliant / responded) are not reminders.
   const items = letters
     .map((letter) => ({ letter, compliance: getCompliance(letter) }))
-    .filter(({ compliance }) => compliance && (compliance.status === 'OVERDUE' || compliance.status === 'DUE_SOON'))
+    .filter(({ compliance }) => compliance && ['OVERDUE', 'DUE_SOON', 'PENDING'].includes(compliance.status))
     .sort((a, b) => a.compliance.daysLeft - b.compliance.daysLeft);
 
   if (!items.length) return null;
 
   const overdue = items.filter((i) => i.compliance.status === 'OVERDUE').length;
-  const dueSoon = items.length - overdue;
+  const upcoming = items.length - overdue;
 
   return (
     <section className="rounded-2xl border border-amber-200 bg-amber-50/70 p-5 dark:border-amber-900/50 dark:bg-amber-950/30">
@@ -55,7 +58,7 @@ export function DeadlineReminders() {
         <BellRing size={18} className="text-amber-600 dark:text-amber-300" />
         <h2 className="text-sm font-extrabold uppercase tracking-wide text-amber-800 dark:text-amber-200">Deadline reminders</h2>
         <span className="ml-auto text-xs font-bold text-amber-700 dark:text-amber-300">
-          {overdue > 0 && `${overdue} overdue`}{overdue > 0 && dueSoon > 0 && ' · '}{dueSoon > 0 && `${dueSoon} due soon`}
+          {overdue > 0 && `${overdue} overdue`}{overdue > 0 && upcoming > 0 && ' · '}{upcoming > 0 && `${upcoming} upcoming`}
         </span>
         <button
           type="button"

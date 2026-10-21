@@ -15,7 +15,6 @@ export const institutionGroups = [
       'Twin City Energy Limited',
       'Amandi Energy Limited',
       'CENIT Energy Limited',
-      'Trojan Power Limited',
       'Genser Energy Ghana Limited',
       'Early Power Limited',
       'Rotan Power Limited'

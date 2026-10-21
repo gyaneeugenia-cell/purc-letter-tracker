@@ -4,8 +4,8 @@ import { Archive, BarChart3, FileSearch, Inbox, LayoutDashboard, Send, ShieldChe
 // sidebar and the mobile slide-in drawer so they never drift apart).
 export const navItems = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Received Letter Register', to: '/incoming', icon: Inbox },
-  { label: 'Dispatched Letter Register', to: '/outgoing', icon: Send },
+  { label: 'Received Letters', to: '/incoming', icon: Inbox },
+  { label: 'Dispatched Letters', to: '/outgoing', icon: Send },
   { label: 'Search', to: '/search', icon: FileSearch },
   { label: 'Tracking Timeline', to: '/timeline', icon: Archive },
   { label: 'Analytics', to: '/analytics', icon: BarChart3 },

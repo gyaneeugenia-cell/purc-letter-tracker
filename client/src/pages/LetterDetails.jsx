@@ -301,7 +301,6 @@ export default function LetterDetails() {
         ['Type', displayType(letter)],
         ['Reference', letter.trackingNumber],
         ['Registry number', letter.registryNumber],
-        ['No. of letter', letter.letterNumber],
         ['PURC directorate the letter came from', sourceDepartmentForLetter(letter)],
         ['Recipient institution', letter.recipient],
         ['Date', letter.letterDate ? new Date(letter.letterDate).toLocaleDateString() : '-'],
@@ -311,7 +310,6 @@ export default function LetterDetails() {
         ['Type', displayType(letter)],
         ['Reference', letter.trackingNumber],
         ['Registry number', letter.registryNumber],
-        ['No. of letter', letter.letterNumber],
         ['Institution letter came from', letter.senderOrganization || letter.sender],
         ['From whom sent', letter.sender],
         ['Recipient directorate', letter.routeDepartment],
@@ -492,10 +490,6 @@ export default function LetterDetails() {
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
             Registry number
             <input className="input" inputMode="numeric" pattern="[0-9]*" value={editForm.registryNumber} onChange={(event) => setEditForm({ ...editForm, registryNumber: numericOnly(event.target.value) })} />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
-            No. of letter
-            <input className="input" inputMode="numeric" pattern="[0-9]*" value={editForm.letterNumber} onChange={(event) => setEditForm({ ...editForm, letterNumber: numericOnly(event.target.value) })} />
           </label>
           <input className="input md:col-span-2" placeholder="Subject" value={editForm.subject} onChange={(event) => setEditForm({ ...editForm, subject: event.target.value })} required />
           {letter.type === 'INCOMING' ? (

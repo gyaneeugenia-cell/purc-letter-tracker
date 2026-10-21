@@ -208,14 +208,14 @@ export default function Letters({ type }) {
             {type === 'INCOMING' ? <Inbox size={22} /> : <Send size={22} />}
           </div>
           <div>
-            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}</h1>
+            <h1 className="text-lg font-black tracking-tight text-ink dark:text-white">{type === 'INCOMING' ? 'Received Letters' : 'Dispatched Letters'}</h1>
             <div className="mt-1"><PeriodLabel timeRange={timeRange} /></div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <button className="soft-button" onClick={() => setOpen(true)}><Plus size={15} /> {type === 'INCOMING' ? 'Register received letter' : 'Register dispatched letter'}</button>
           <ExportButtons
-            title={type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}
+            title={type === 'INCOMING' ? 'Received Letters' : 'Dispatched Letters'}
             periodLabel={formatRangeLabel(timeRange)}
             columns={letterExportColumns}
             rows={filteredLetters}
@@ -250,7 +250,7 @@ export default function Letters({ type }) {
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-5 py-4 dark:border-white/10">
           <div>
             <h2 className="text-sm font-extrabold uppercase tracking-wide text-ink dark:text-white">
-              {type === 'INCOMING' ? 'Received Letter Register' : 'Dispatched Letter Register'}
+              {type === 'INCOMING' ? 'Received Letters' : 'Dispatched Letters'}
             </h2>
             <p className="mt-0.5 text-xs font-medium text-slate-400">Select a reference number to open the letter's details.</p>
           </div>
@@ -282,10 +282,6 @@ export default function Letters({ type }) {
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
             Registry number
             <input className="input cursor-not-allowed bg-slate-100 text-slate-500 dark:bg-white/5" value="Auto-generated on save" readOnly />
-          </label>
-          <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200">
-            No. of letter
-            <input className="input" inputMode="numeric" pattern="[0-9]*" placeholder="No. of letter on the document" value={form.letterNumber} onChange={(e) => setForm({ ...form, letterNumber: numericOnly(e.target.value) })} />
           </label>
           <label className="grid gap-1 text-sm font-semibold text-slate-700 dark:text-slate-200 md:col-span-2">
             Subject
