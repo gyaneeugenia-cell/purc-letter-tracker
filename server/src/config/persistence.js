@@ -16,6 +16,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from './db.js';
 import { letters, users, departments, movements, auditLogs, notifications, DEPARTMENT_RENAMES, CANONICAL_DEPARTMENTS, LEGACY_ACTOR_RENAMES } from '../utils/sampleData.js';
 import { renameUserEverywhere } from '../utils/userRefs.js';
+import { isExecutiveSecretary } from '../utils/roles.js';
 
 export const DEFAULT_SECURITY_QUESTION = 'In which city is PURC headquartered?';
 const DEFAULT_SECURITY_ANSWER = 'accra';
@@ -232,6 +233,12 @@ export async function initPersistence() {
     });
     movements.forEach((m) => { m.department = rename(m.department); });
     users.forEach((u) => { u.department = rename(u.department); });
+
+    // Executive Secretary directorate members manage the program, so ensure they
+    // are administrators (only grants admin, never removes it from others).
+    users.forEach((u) => {
+      if (isExecutiveSecretary(u.department)) u.role = 'SYSTEM_ADMIN';
+    });
 
     // Clean up names left behind by renames made before the cascade existed, so
     // no record still shows a person's old name. Safe to run on every start.

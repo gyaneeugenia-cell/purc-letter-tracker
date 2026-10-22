@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { departments, users } from '../../utils/sampleData.js';
 import { renameUserEverywhere } from '../../utils/userRefs.js';
+import { effectiveRole, isExecutiveSecretary } from '../../utils/roles.js';
 import { DEFAULT_SECURITY_QUESTION } from '../../config/persistence.js';
 
 export const adminRouter = Router();
@@ -59,7 +60,11 @@ adminRouter.patch('/users/:id', (req, res) => {
     target.email = value;
   }
   if (title !== undefined) target.title = String(title).trim();
-  if (department !== undefined) target.department = String(department).trim();
+  if (department !== undefined) {
+    target.department = String(department).trim();
+    // Moving into the Executive Secretary directorate grants admin.
+    target.role = effectiveRole(target.role, target.department);
+  }
 
   res.json({ data: sanitize(target) });
 });
@@ -80,7 +85,8 @@ adminRouter.post('/users', requireSystemAdmin, (req, res) => {
     name,
     email,
     passwordHash: bcrypt.hashSync(password, 10),
-    role,
+    // Executive Secretary directorate members are administrators.
+    role: effectiveRole(role, department),
     department,
     title,
     // Give the account a security question straight away so the person can use
@@ -104,8 +110,12 @@ adminRouter.patch('/users/:id/role', requireSystemAdmin, (req, res) => {
   if (user.id === req.user.id && role !== 'SYSTEM_ADMIN') {
     return res.status(400).json({ message: 'You cannot remove admin access from your own active account' });
   }
+  // Executive Secretary directorate members stay administrators.
+  if (role !== 'SYSTEM_ADMIN' && isExecutiveSecretary(user.department)) {
+    return res.status(400).json({ message: 'Executive Secretary directorate members are administrators and cannot be set to Normal User' });
+  }
 
-  user.role = role;
+  user.role = effectiveRole(role, user.department);
   res.json({ data: sanitize(user) });
 });
 

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
 import { users } from '../../utils/sampleData.js';
 import { renameUserEverywhere } from '../../utils/userRefs.js';
+import { effectiveRole } from '../../utils/roles.js';
 import { authenticate, signUserToken } from '../../middleware/auth.js';
 
 export const authRouter = Router();
@@ -59,7 +60,8 @@ authRouter.post('/register', (req, res) => {
     name,
     email,
     passwordHash: bcrypt.hashSync(password, 10),
-    role: 'NORMAL_USER',
+    // Executive Secretary directorate members are administrators.
+    role: effectiveRole('NORMAL_USER', department),
     department,
     title,
     securityQuestion: String(securityQuestion).trim(),
@@ -145,7 +147,11 @@ authRouter.patch('/profile', authenticate, (req, res) => {
   }
 
   if (title !== undefined) user.title = String(title).trim();
-  if (department !== undefined) user.department = String(department).trim();
+  if (department !== undefined) {
+    user.department = String(department).trim();
+    // Moving into the Executive Secretary directorate grants admin.
+    user.role = effectiveRole(user.role, user.department);
+  }
 
   if (newPassword) {
     if (String(newPassword).length < 8) {
